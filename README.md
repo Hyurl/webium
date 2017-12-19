@@ -111,8 +111,9 @@ Valid `options` include:
 - `jsonp` Set a default jsonp callback name if you want.
 
 This module also automatically parses request body if the Content-Type is 
-`application/www-url-encoded` or `application/json` by using `body-parser`, so
-other configs worked with `body-parser` can also be set to `options`.
+`application/x-www-form-urlencoded` or `application/json` by using 
+`body-parser`, so other configs worked with `body-parser` can also be set to 
+`options`.
 
 ```javascript
 var app = new App();
@@ -183,7 +184,7 @@ won't be able to modified them.
 - `cookies` An object carries all parsed `Cookie`s sent by the client.
 - `body` An object carries requested body parsed by 
     [body-parser](https://www.npmjs.com/package/body-parser). Remember, only
-    `json` and `www-url-encoded` are parsed automatically.
+    `json` and `x-www-form-urlencoded` are parsed automatically.
 - `ip` The real client IP, if `useProxy` is `true`, then trying to use 
     `proxy`'s `ip` first.
 - `ips` An array carries all IP addresses, includes client IP and proxy 
