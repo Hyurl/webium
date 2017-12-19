@@ -1,0 +1,33 @@
+{
+  "name": "webium",
+  "version": "0.1.0",
+  "description": "A minimal web framework based on connect and enhanced req-res.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test"
+  },
+  "keywords": [
+    "framework",
+    "webium",
+    "connect"
+  ],
+  "author": {
+    "name": "Ayon Lee",
+    "email": "i@hyurl.com",
+    "url": "http://hyurl.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyurl/webium.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Hyurl/webium/issues",
+    "email": "i@hyurl.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "connect": "^3.6.5",
+    "enhance-req-res": "^0.1.6"
+  }
+}

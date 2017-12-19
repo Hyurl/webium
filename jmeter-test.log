@@ -1,0 +1,26 @@
+This test only performs a response 'Hello, World!' with a custom header: 
+'Content-Type: text/html; charset=UTF-8' on the same machine running Windows 10.
+
+I choose and show the best result from several tests of all these frameworks.
+But multiple and more complicated conditions may produce different results.
+
+Webium provides more detection in `res.send()` method and pre-calculated 
+properties on `req` object, so when in simple cases, it may not perform as 
+good as `koa`, but will act better in more complicated scenarios.
+
+
+webium.res.end:
+    10000 in 00:00:06 = 1721.8/s Avg:   292 Min:     1 Max:  2207 Err:   546 (5.46%)
+webium.res.send:
+    10000 in 00:00:07 = 1456.9/s Avg:   368 Min:     2 Max:  2294 Err:   906 (9.06%)
+
+express.res.end:
+    10000 in 00:00:06 = 1572.8/s Avg:   336 Min:     1 Max:  1970 Err:   706 (7.06%)
+express.res.send:
+    10000 in 00:00:07 = 1456.2/s Avg:   356 Min:     2 Max:  2187 Err:   841 (8.41%)
+
+koa.ctx.body:
+    10000 in 00:00:06 = 1738.2/s Avg:   263 Min:     1 Max:  2133 Err:   360 (3.60%)
+
+connect.res.end:
+    10000 in 00:00:05 = 2066.1/s Avg:   210 Min:     0 Max:  2127 Err:   208 (2.08%)
