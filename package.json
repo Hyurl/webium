@@ -1,8 +1,9 @@
 {
   "name": "webium",
-  "version": "0.1.0",
-  "description": "A minimal web framework based on connect and enhanced req-res.",
-  "main": "index.js",
+  "version": "0.2.0",
+  "description": "A minimal web framework with middleware and routes.",
+  "main": "dist/index.js",
+  "types": "src/index.ts",
   "scripts": {
     "test": "node test"
   },
@@ -26,8 +27,9 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@types/node": "^9.3.0",
     "body-parser": "^1.18.2",
-    "connect": "^3.6.5",
-    "enhance-req-res": "^0.1.6"
+    "enhance-req-res": "^0.2.3",
+    "path-to-regexp": "^2.1.0"
   }
 }

@@ -1,10 +1,10 @@
 # Webium
 
-**A minimal web framework based on connect and enhanced req-res.**
+**A minimal web framework with middleware and routes.**
 
 This module adds additional properties and methods to the corresponding `req` 
 and `res` objects in a http server, and enhance abilities of the program.
-The program to enhance has been separated as a individual module 
+The program for enhancement has been separated as an individual module 
 [enhance-req-res](https://github.com/hyurl/enhance-req-res), which will work 
 with other frameworks or the internal Node.js http server, you can check it 
 out if you want.
@@ -12,17 +12,8 @@ out if you want.
 It has both `express` style and `koa` style, but in a very different way, and 
 only keeps very few and useful methods.
 
-**Webium** provides more detection in `res.send()` method and pre-calculated 
-properties on `req` object, so when in simple cases, it may not perform as 
-good as `koa` and `express`, but will act better in more complicated scenarios.
-Please have a look at 
-[jmeter-test.log](https://github.com/hyurl/webium/blob/master/jmeter-test.log).
-
-This module is based on `connect`, so you can use its abilities and middleware.
-
-This module provides a `.d.ts` (TypeScript Declaration File), so if you're 
-using an IDE such as `VSCode` or `WebStorm`, it should give you some very 
-useful intelli-sence of objects.
+This module is compatible to most of `connect` and `express` middleware, so 
+you can use them instead.
 
 ## Install
 
@@ -33,21 +24,25 @@ npm install webium
 ## Example
 
 ```javascript
-const { App } = require("webium");
+const { App } = require("./");
 
-app.use((req, res) => {
-    // Print out some request imformation:
-    console.log("Client IP:", req.ip);
-    console.log("Requested href:", req.href);
-    console.log("Requested hostname:", req.hostname);
-    console.log("Accepted Language:", req.lang);
+var app = new App();
 
-    // Set some response information.
-    res.cookies.username = "Luna";
-    res.refresh = 5; // refresh the page every 5 seconds.
+app.get("/", (req, res) => {
+    res.send("<h1>Welcome to your first webium app!</h1>");
+}).get("/user/:id", (req, res) => {
+    console.log("UID:", req.params.id);
+    res.send({
+        id: req.params.id,
+        name: "Luna",
+        origin: "Webium"
+    });
+}).post("/user", (req, res) => {
+    console.log("Body:", req.body);
+    res.send(req.body);
+});
 
-    res.send("<p>Hello, World!</p>"); // text/html;
-}).listen(80);
+app.listen(80);
 ```
 
 You can use `npm test` to test this code after downloading.
@@ -56,24 +51,24 @@ You can use `npm test` to test this code after downloading.
 
 ### webium
 
-A namespace that only contains to classes: `App` and `Cookie`, while `App` 
-extends [connect](https://www.npmjs.com/package/body-parser), and `Cookie` 
-comes from [sfn-cookie](https://www.npmjs.com/package/sfn-cookie).
+A namespace that contains classes `App`, `Router` and `Cookie`, while the 
+`Cookie` comes from [sfn-cookie](https://www.npmjs.com/package/sfn-cookie),
+and the `App` inherited `Router`.
 
 ```javascript
 const webium = require("webium");
 
 // recommended:
-const { App, Cookie } = require("webium");
+const { App, Router, Cookie } = require("webium");
 ```
 
 ### Cookie
 
-- `new Cookie(name: string, value: string, options:? object)`
+- `new Cookie(name: string, value: string, options?: object)`
     All `options` include:
     - `maxAge: number` How many seconds that this cookie should last.
     - `expires: number|string|Date`: Keep alive to a specified date or time.
-    - `sameSite`: Honor same-site principle, could be either `strict` or `lax`.
+    - `sameSite`: Honor same-site principle, could be either `Strict` or `Lax`.
     - `domain`: Set cookie for a specified domain name.
     - `path`: Set cookie for a specified pathname.
     - `httpOnly`: Only HTTP, not JavaScript, can access this cookie.
@@ -97,13 +92,98 @@ var cookie1 = new Cookie("username=Luna"),
     cookie4 = new Cookie({ name: "username", value: "Luna", maxAge: 120, httpOnly: true });
 ```
 
+### Router
+
+#### `new Router`
+
+Creates a new router that can be used by the `App`.
+
+```javascript
+const { App, Router } = require("webium");
+
+var app = new App,
+    router = new Router;
+
+app.use(router);
+```
+
+#### `router.use()`
+
+Adds a listener function to all routes, or concatenate another router.
+
+**signatures:**
+
+- `use(listener: (req: Request, res: Response, next: Function) => void): this`
+- `use(router: Router): this`
+
+```javascript
+router.use((req, res, next) => {
+    // ...
+    next();
+});
+
+var router2 = new Router;
+router2.user(router);
+```
+
+#### `method(name: string, path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+
+Adds a listener function to a specified method and path.
+
+```javascript
+router.method("GET", "/", (req, res, next) => {
+    // ...
+    next();
+});
+```
+
+The `path` in `express` style, will be parsed by 
+[path-to-regexp](https://github.com/pillarjs/path-to-regexp) module, you can 
+learn about [more information about routing](http://expressjs.com/en/guide/routing.html) 
+here.
+
+#### `delete(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+
+Short-hand of `router.method("DELETE", path, listener)`.
+
+#### `get(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+
+Short-hand of `router.method("GET", path, listener)`.
+
+#### `head(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+
+Short-hand of `router.method("HEAD", path, listener)`.
+
+#### `patch(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+
+Short-hand of `router.method("PATCH", path, listener)`.
+
+#### `post(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+
+Short-hand of `router.method("POST", path, listener)`.
+
+#### `put(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+
+Short-hand of `router.method("PUT", path, listener)`.
+
+#### `all(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+
+Adds a listener function to the all methods.
+
+**alias:**
+
+- `any()`
+
 ### App
 
-#### `new App(options?: {[x: string]: string})`
+The `App` class inherited from `Router`.
 
-Valid `options` include:
+#### `new App(options?: AppOptions)`
 
-- `domain` Set a domain name for the program to find out the subdomain.
+Interface `AppOptions` includes:
+
+- `domain` Set a domain name (or multiple ones in an array) for the program to 
+    find out the subdomain.
  - `useProxy` If `true`, when access properties like `req.ip` and 
     `req.host`, will firstly try to get info from proxy, default: `false`.
 - `capitalize` Auto-capitalize response headers when setting, default: `true`.
@@ -123,20 +203,31 @@ var app = new App({
     domain: "example.com",
     useProxy: true
 });
+
+app.get("/", (req, res, next) => {
+    // ...
+    next();
+});
 ```
 
-#### `app.use(fn: (req, res)=>void)` and `app.use(route: string, fn: (req, res)=>void)`
+#### `listen()`
 
-Same `use()` of [connect](https://www.npmjs.com/package/body-parser).
+Same `listen()` as [http.listen()](https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_server_listen).
 
-#### `app.listen(port)` and so on
+#### `listener`
 
-Same `listen()` of [connect](https://www.npmjs.com/package/body-parser).
+Returns the listener function for `http.Server()`, so you can use this module 
+with `https`.
+
+```javascript
+const { createServer } = require("https");
+
+createServer(app.listener).listen(443);
+```
 
 ### Request
 
-The Request is actually IncomingMessage, but adds more properties and methods 
-onto it.
+The Request interface extends IncomingMessage with more properties and methods.
 
 Some of these properties are read-only for security reasons, that means you 
 won't be able to modified them.
@@ -162,8 +253,9 @@ won't be able to modified them.
     `useProxy` is true, then try to use `proxy`'s `host` first.
 - `hostname` The requested host name (without `port`).
 - `port` The requested port.
+- `domain` The request domain name.
 - `subdomain` Unlike **express** or **koa**'s `subdomains`, this property is 
-    calculated by setting the `domain` option, and it's a string.
+    calculated by setting the `domain` option.
 - `path` Full requested path (with `search`).
 - `pathname` Directory part of requested path (without `search`).
 - `search` The requested URL `search` string, with a leading `?`.
@@ -181,7 +273,8 @@ won't be able to modified them.
 - `charsets` An array carries all `Accept-Charset`s, ordered by `q`ualities.
 - `length` The `Content-Length` of requested body.
 - `xhr` Whether the request fires with `X-Requested-With: XMLHttpRequest`.
-- `cookies` An object carries all parsed `Cookie`s sent by the client.
+- `cookies` An object carries all parsed cookies sent by the client.
+- `params` The URL parameters.
 - `body` An object carries requested body parsed by 
     [body-parser](https://www.npmjs.com/package/body-parser). Remember, only
     `json` and `x-www-form-urlencoded` are parsed automatically.
@@ -194,14 +287,15 @@ won't be able to modified them.
 - `accepts` An array carries all `Accept`s types, ordered by `q`ualities.
 - `lang` The first accepted response language (`accepts[0]`).
 - `langs` An array carries all `Accept-Language`s, ordered by `q`ualities.
-- `encoding` The first accepted response encodings (`encodings[0]`). 
+- `encoding` The first accepted response encoding (`encodings[0]`). 
 - `encodings` An array carries all `Accept-Encoding`s, ordered by sequence.
 - `cache` `Cache-Control` sent by the client, it could be `null` (`no-cache`),
-    a `number` of seconds (`max-age`), or a string `private`, `public`, etc.
+    a `number` of seconds (`max-age`), or a string like `private`, `public`, 
+    etc.
 - `keepAlive` Whether the request fires with `Connection: keep-alive`.
 - `get(field)` Gets a request header field's (case insensitive) value.
 - `is(...types)` Checks if the request `Content-Type` matches the given types,
-    avaialable of using short-hand words, like `html` indicates `text/html`. 
+    available of using short-hand words, like `html` indicates `text/html`. 
     If pass, returns the first matched type.
 
 ```javascript
@@ -216,10 +310,9 @@ console.log(req.lang);
 
 ### Response
 
-The Response is actually ServerResponse, but adds more properties and methods 
-onto it.
+The Response interface extends ServerResponse with more properties and methods.
 
-Most of `res` properties are setters/getters, if you assign a new value to 
+Most of its properties are setters/getters, if you assign a new value to 
 them, that will actually mean something.
 
 #### `code` - Set/Get status code.
@@ -341,7 +434,7 @@ console.log(res.cache); // private
 ```javascript
 res.vary = "Content-Type";
 res.vary = ["Content-Type", "Content-Length"]; // Set multiple fields.
-console.log(res.vary); // => Content-Type, Content-Length
+console.log(res.vary); // => [Content-Type, Content-Length]
 ```
 
 #### `keepAlive` - Set/Get `Connection`.
@@ -469,8 +562,8 @@ if(!req.auth){ // Require authendication if haven't.
 
 #### `unauth()` - Clears authentication.
 
-Since browsers clear authentication while response `401 Unauthorized`, so this
-method is exactly the same as `req.auth()`, only more readable.
+Since browsers clear authentication while responsed `401 Unauthorized`, so 
+this method is exactly the same as `req.auth()`, only more readable.
 
 #### `redirect(url, code?: 301 | 302)` - Redirects the request to a specified URL.
 
