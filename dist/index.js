@@ -50,6 +50,11 @@ var webium;
                     }
                 }
             }
+            else {
+                throw new TypeError("The argument passed to '" +
+                    this.constructor.name +
+                    ".use()' must be a function or an instance of Router.");
+            }
             return this;
         }
         /**
@@ -58,6 +63,8 @@ var webium;
          * @param path The URL path.
          */
         method(name, path, listener) {
+            if (typeof listener !== "function")
+                throw new TypeError("The listener must be a function.");
             if (path === "*") {
                 for (let x in this.stacks) {
                     this.stacks[x].listeners[name].push(listener);
@@ -156,9 +163,11 @@ var webium;
                         values.shift();
                         let i = -1, j = -1, listeners = stacks.listeners[req.method], next = () => {
                             i += 1;
-                            let listener = listeners[i];
-                            if (typeof listener === "function") {
-                                listener.call(this, req, res, next);
+                            if (i < listeners.length) {
+                                return listeners[i].call(this, req, res, next);
+                            }
+                            else {
+                                return void 0;
                             }
                         };
                         // Set url params:

@@ -55,7 +55,7 @@ namespace webium {
                 regexp: RegExp,
                 params: pathToRegexp.Key[],
                 listeners: {
-                    [method: string]: Array<(req: Request, res: Response, next: Function) => void>
+                    [method: string]: Array<(req: Request, res: Response, next: Function) => any>
                 }
             }
         };
@@ -76,7 +76,7 @@ namespace webium {
         }
 
         /** Adds a listener function to all routes. */
-        use(listener: (req: Request, res: Response, next: Function) => void): this;
+        use(listener: (req: Request, res: Response, next: Function) => any): this;
         /** Uses an existing router. */
         use(router: Router): this;
         use(arg) {
@@ -99,6 +99,10 @@ namespace webium {
                         this.stacks[path].listeners[method].push(arg);
                     }
                 }
+            } else {
+                throw new TypeError("The argument passed to '" +
+                    this.constructor.name +
+                    ".use()' must be a function or an instance of Router.");
             }
             return this;
         }
@@ -108,7 +112,10 @@ namespace webium {
          * @param name GET, POST, HEAD, etc.
          * @param path The URL path.
          */
-        method(name: string, path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        method(name: string, path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+            if (typeof listener !== "function")
+                throw new TypeError("The listener must be a function.");
+
             if (path === "*") {
                 for (let x in this.stacks) {
                     this.stacks[x].listeners[name].push(listener);
@@ -131,37 +138,37 @@ namespace webium {
         }
 
         /** Adds a listener function to the `DELETE` method. */
-        delete(path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        delete(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
             return this.method("DELETE", path, listener);
         }
 
         /** Adds a listener function to the `GET` method. */
-        get(path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        get(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
             return this.method("GET", path, listener);
         }
 
         /** Adds a listener function to the `HEAD` method. */
-        head(path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        head(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
             return this.method("HEAD", path, listener);
         }
 
         /** Adds a listener function to the `PATCH` method. */
-        patch(path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        patch(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
             return this.method("PATCH", path, listener);
         }
 
         /** Adds a listener function to the `POST` method. */
-        post(path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        post(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
             return this.method("POST", path, listener);
         }
 
         /** Adds a listener function to the `PUT` method. */
-        put(path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        put(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
             return this.method("PUT", path, listener);
         }
 
         /** Adds a listener function to the all methods. */
-        all(path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        all(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
             for (let method of (<typeof Router>this.constructor).METHODS) {
                 this.method(method, path, listener);
             }
@@ -169,7 +176,7 @@ namespace webium {
         }
 
         /** An alias of `router.all()`. */
-        any(path: string, listener: (req: Request, res: Response, next: Function) => void): this {
+        any(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
             return this.all(path, listener);
         }
     }
@@ -218,9 +225,10 @@ namespace webium {
                             listeners = stacks.listeners[req.method],
                             next = () => {
                                 i += 1;
-                                let listener = listeners[i];
-                                if (typeof listener === "function") {
-                                    listener.call(this, req, res, next);
+                                if (i < listeners.length) {
+                                    return listeners[i].call(this, req, res, next);
+                                } else {
+                                    return void 0;
                                 }
                             };
 

@@ -16,4 +16,18 @@ app.get("/", (req, res) => {
     res.send(req.body);
 });
 
+// This route contains many features: using async/await, calling next() before
+// doing stuffs, returning value from the listener function and catching 
+// errors across the request life cycle.
+app.get("/async", async (req, res, next) => {
+    try {
+        var result = await next();
+        res.send(result); // Hello, Webium!
+    } catch (e) {
+        res.send(e instanceof Error ? e.message : e);
+    }
+}).get("/async", async (req, res) => {
+    return "Hello, Webium!";
+});
+
 app.listen(80);

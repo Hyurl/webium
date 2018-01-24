@@ -42,6 +42,20 @@ app.get("/", (req, res) => {
     res.send(req.body);
 });
 
+// This route contains many features: using async/await, calling next() before
+// doing stuffs, returning value from the listener function and catching 
+// errors across the request life cycle.
+app.get("/async", async (req, res, next) => {
+    try {
+        var result = await next();
+        res.send(result); // Hello, Webium!
+    } catch (e) {
+        res.send(e instanceof Error ? e.message : e);
+    }
+}).get("/async", async (req, res) => {
+    return "Hello, Webium!";
+});
+
 app.listen(80);
 ```
 
@@ -113,7 +127,7 @@ Adds a listener function to all routes, or concatenate another router.
 
 **signatures:**
 
-- `use(listener: (req: Request, res: Response, next: Function) => void): this`
+- `use(listener: (req: Request, res: Response, next: Function) => any): this`
 - `use(router: Router): this`
 
 ```javascript
@@ -126,7 +140,7 @@ var router2 = new Router;
 router2.user(router);
 ```
 
-#### `method(name: string, path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+#### `method(name: string, path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
 Adds a listener function to a specified method and path.
 
@@ -142,31 +156,31 @@ The `path` in `express` style, will be parsed by
 learn about [more information about routing](http://expressjs.com/en/guide/routing.html) 
 here.
 
-#### `delete(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+#### `delete(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
 Short-hand of `router.method("DELETE", path, listener)`.
 
-#### `get(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+#### `get(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
 Short-hand of `router.method("GET", path, listener)`.
 
-#### `head(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+#### `head(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
 Short-hand of `router.method("HEAD", path, listener)`.
 
-#### `patch(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+#### `patch(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
 Short-hand of `router.method("PATCH", path, listener)`.
 
-#### `post(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+#### `post(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
 Short-hand of `router.method("POST", path, listener)`.
 
-#### `put(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+#### `put(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
 Short-hand of `router.method("PUT", path, listener)`.
 
-#### `all(path: string, listener: (req: Request, res: Response, next: Function) => void): this`
+#### `all(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
 Adds a listener function to the all methods.
 
