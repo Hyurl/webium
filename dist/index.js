@@ -29,6 +29,9 @@ var webium;
                     listeners: {}
                 }];
             this.caseSensitive = caseSensitive;
+            for (let method of this.constructor.METHODS) {
+                this.stacks[0].listeners[method] = [];
+            }
         }
         use(arg) {
             if (arg instanceof Router) {

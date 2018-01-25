@@ -1,6 +1,6 @@
 {
   "name": "webium",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A minimal web framework with middleware and routes.",
   "main": "dist/index.js",
   "types": "src/index.ts",
@@ -30,7 +30,6 @@
     "@types/node": "^9.3.0",
     "body-parser": "^1.18.2",
     "enhance-req-res": "^0.2.6",
-    "express": "^4.16.2",
     "path-to-regexp": "^2.1.0"
   }
 }

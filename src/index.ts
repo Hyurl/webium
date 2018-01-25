@@ -75,6 +75,9 @@ namespace webium {
          */
         constructor(caseSensitive = false) {
             this.caseSensitive = caseSensitive;
+            for (let method of (<typeof Router>this.constructor).METHODS) {
+                this.stacks[0].listeners[method] = [];
+            }
         }
 
         /** Adds a listener function to all routes. */
