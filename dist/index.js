@@ -75,10 +75,11 @@ var webium;
                     this.stacks[path] = {
                         regexp: null,
                         params: [],
-                        listeners: {
-                            [name]: Object.assign([], this.stacks["*"].listeners[name])
-                        }
+                        listeners: {}
                     };
+                }
+                if (this.stacks[path].listeners[name] === undefined) {
+                    this.stacks[path].listeners[name] = Object.assign([], this.stacks["*"].listeners[name]);
                 }
                 this.stacks[path].listeners[name].push(listener);
                 this.stacks[path].regexp = pathToRegexp(path, this.stacks[path].params);
