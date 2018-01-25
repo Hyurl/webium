@@ -24,7 +24,7 @@ npm install webium
 ## Example
 
 ```javascript
-const { App } = require("./");
+const { App, Router } = require("./");
 
 var app = new App();
 
@@ -54,6 +54,19 @@ app.get("/async", async (req, res, next) => {
     }
 }).get("/async", async (req, res) => {
     return "Hello, Webium!";
+});
+
+var router = new Router();
+
+router.get("/another-router", (req, res)=>{
+    res.send("This is another router.");
+});
+
+app.use(router);
+
+// This route will match any URL.
+app.get("(.*)", (req, res) => {
+    res.send("Unknown route.");
 });
 
 app.listen(80);
@@ -108,7 +121,7 @@ var cookie1 = new Cookie("username=Luna"),
 
 ### Router
 
-#### `new Router`
+#### `new Router(caseSensitive?: boolean)`
 
 Creates a new router that can be used by the `App`.
 
@@ -137,8 +150,13 @@ router.use((req, res, next) => {
 });
 
 var router2 = new Router;
-router2.user(router);
+router2.use(router);
 ```
+
+Be aware, if you `use` another router when the current one has same routes,
+only their listeners will be merged. If the routes in that router don't exist 
+in the current one, then references will be created, that means if you 
+modified the routes of that router, the current one will also be affected.
 
 #### `method(name: string, path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
@@ -148,37 +166,40 @@ Adds a listener function to a specified method and path.
 router.method("GET", "/", (req, res, next) => {
     // ...
     next();
+}).method("GET", "/user/:name", (req, res, next) => {
+    // GET /user/luna
+    console.log(req.params); // { name: 'luna' }
+    // ...
 });
 ```
 
 The `path` in `express` style, will be parsed by 
 [path-to-regexp](https://github.com/pillarjs/path-to-regexp) module, you can 
-learn about [more information about routing](http://expressjs.com/en/guide/routing.html) 
-here.
+learn more details in its documentation.
 
 #### `delete(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
-Short-hand of `router.method("DELETE", path, listener)`.
+Short-hand for `router.method("DELETE", path, listener)`.
 
 #### `get(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
-Short-hand of `router.method("GET", path, listener)`.
+Short-hand for `router.method("GET", path, listener)`.
 
 #### `head(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
-Short-hand of `router.method("HEAD", path, listener)`.
+Short-hand for `router.method("HEAD", path, listener)`.
 
 #### `patch(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
-Short-hand of `router.method("PATCH", path, listener)`.
+Short-hand for `router.method("PATCH", path, listener)`.
 
 #### `post(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
-Short-hand of `router.method("POST", path, listener)`.
+Short-hand for `router.method("POST", path, listener)`.
 
 #### `put(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
-Short-hand of `router.method("PUT", path, listener)`.
+Short-hand for `router.method("PUT", path, listener)`.
 
 #### `all(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
 
@@ -203,6 +224,7 @@ Interface `AppOptions` includes:
 - `capitalize` Auto-capitalize response headers when setting, default: `true`.
 - `cookieSecret` A secret key to sign/unsign cookie values.
 - `jsonp` Set a default jsonp callback name if you want.
+- `caseSensitive` Set the routes to be case-sensitive.
 
 This module also automatically parses request body if the Content-Type is 
 `application/x-www-form-urlencoded` or `application/json` by using 
@@ -291,7 +313,7 @@ won't be able to modified them.
 - `params` The URL parameters.
 - `body` An object carries requested body parsed by 
     [body-parser](https://www.npmjs.com/package/body-parser). Remember, only
-    `json` and `x-www-form-urlencoded` are parsed automatically.
+    `json` and `x-www-form-urlencoded` are parsed by default.
 - `ip` The real client IP, if `useProxy` is `true`, then trying to use 
     `proxy`'s `ip` first.
 - `ips` An array carries all IP addresses, includes client IP and proxy 
@@ -660,3 +682,10 @@ res.send("<p>Hello, World!</p>");
 Worth mentioned, if you use `res.send()` to send a Buffer, most browsers will 
 download the buffer as a file, so it's always better to set `res.attachment` 
 when you are sending buffers.
+
+### About the next()
+
+The function `next` returns a wrapper of the next listener, when it is called,
+the returning value (if any) of the listener will be returned. This module 
+will try to match as many routes as it can as long as you continue calling the
+`next()`, so you must not call it unless you know what you're doing.

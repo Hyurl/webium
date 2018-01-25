@@ -20,11 +20,12 @@ namespace webium {
     }
 
     export interface AppOptions {
-        domain: string | string[];
-        useProxy: boolean;
-        capitalize: boolean;
-        cookieSecret: string;
-        jsonp: string | false;
+        domain?: string | string[];
+        useProxy?: boolean;
+        capitalize?: boolean;
+        cookieSecret?: string;
+        jsonp?: string | false;
+        caseSensitive?: boolean;
         [x: string]: any
     }
 
@@ -33,7 +34,16 @@ namespace webium {
         useProxy: false,
         capitalize: true,
         cookieSecret: "",
-        jsonp: false
+        jsonp: false,
+        caseSensitive: false
+    }
+
+    export interface RouteStack {
+        regexp: RegExp,
+        params: pathToRegexp.Key[],
+        listeners: {
+            [method: string]: Array<(req: Request, res: Response, next: () => any) => any>
+        }
     }
 
     export class Router {
@@ -50,53 +60,50 @@ namespace webium {
             "TRACE"
         ];
 
-        readonly stacks: {
-            [path: string]: {
-                regexp: RegExp,
-                params: pathToRegexp.Key[],
-                listeners: {
-                    [method: string]: Array<(req: Request, res: Response, next: Function) => any>
-                }
-            }
-        };
+        protected paths: string[] = ["*"];
+        protected stacks: RouteStack[] = [{
+            regexp: null,
+            params: [],
+            listeners: {}
+        }];
 
-        /** Creates a new router that can be used by the `App`. */
-        constructor() {
-            this.stacks = {
-                "*": {
-                    regexp: null,
-                    params: [],
-                    listeners: {}
-                }
-            };
-            let Class = <typeof Router>this.constructor;
-            for (let method of Class.METHODS) {
-                this.stacks["*"].listeners[method] = [];
-            }
+        protected caseSensitive: boolean;
+
+        /**
+         * Creates a new router that can be used by the `App`.
+         * @param caseSensitive Set the routes to be case-sensitive.
+         */
+        constructor(caseSensitive = false) {
+            this.caseSensitive = caseSensitive;
         }
 
         /** Adds a listener function to all routes. */
-        use(listener: (req: Request, res: Response, next: Function) => any): this;
+        use(listener: (req: Request, res: Response, next: () => any) => any): this;
         /** Uses an existing router. */
         use(router: Router): this;
         use(arg) {
             if (arg instanceof Router) {
-                for (let path in arg.stacks) {
-                    if (!this.stacks[path]) {
-                        this.stacks[path] = arg.stacks[path];
-                    } else {
-                        for (let method in arg.stacks[path].listeners) {
-                            this.stacks[path].listeners[method] = Object.assign(
-                                this.stacks[path].listeners[method] || [],
-                                arg.stacks[path].listeners[method]
+                let router = arg;
+                for (let i in router.paths) {
+                    let j = this.paths.indexOf(router.paths[i]);
+                    if (j >= 0) {
+                        let stack = router.stacks[i],
+                            _stack = this.stacks[j];
+                        for (let method in stack.listeners) {
+                            _stack.listeners[method] = Object.assign(
+                                _stack.listeners[method] || [],
+                                stack.listeners[method]
                             );
                         }
+                    } else {
+                        this.paths.push(router.paths[i]);
+                        this.stacks.push(router.stacks[i]);
                     }
                 }
             } else if (arg instanceof Function) {
-                for (let path in this.stacks) {
-                    for (let method in this.stacks[path].listeners) {
-                        this.stacks[path].listeners[method].push(arg);
+                for (let i in this.stacks) {
+                    for (let method in this.stacks[i].listeners) {
+                        this.stacks[i].listeners[method].push(arg);
                     }
                 }
             } else {
@@ -112,64 +119,63 @@ namespace webium {
          * @param name GET, POST, HEAD, etc.
          * @param path The URL path.
          */
-        method(name: string, path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        method(name: string, path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             if (typeof listener !== "function")
                 throw new TypeError("The listener must be a function.");
 
-            if (path === "*") {
-                for (let x in this.stacks) {
-                    this.stacks[x].listeners[name].push(listener);
-                }
-            } else {
-                if (this.stacks[path] === undefined) {
-                    this.stacks[path] = {
-                        regexp: null,
-                        params: [],
-                        listeners: {}
-                    };
-                }
-                if (this.stacks[path].listeners[name] === undefined) {
-                    this.stacks[path].listeners[name] = Object.assign([], this.stacks["*"].listeners[name]);
-                }
-                this.stacks[path].listeners[name].push(listener);
-                this.stacks[path].regexp = pathToRegexp(path, this.stacks[path].params);
+            let i = this.paths.indexOf(path);
+            if (i === -1) {
+                i = this.paths.length;
+                let params = [];
+                this.paths.push(path);
+                this.stacks.push({
+                    regexp: pathToRegexp(path, params, {
+                        sensitive: this.caseSensitive
+                    }),
+                    params,
+                    listeners: {}
+                });
             }
+            if (this.stacks[i].listeners[name] === undefined) {
+                this.stacks[i].listeners[name] = Object.assign([], this.stacks[0].listeners[name]);
+            }
+            this.stacks[i].listeners[name].push(listener);
 
             return this;
         }
 
         /** Adds a listener function to the `DELETE` method. */
-        delete(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        delete(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             return this.method("DELETE", path, listener);
         }
 
         /** Adds a listener function to the `GET` method. */
-        get(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        get(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             return this.method("GET", path, listener);
         }
 
         /** Adds a listener function to the `HEAD` method. */
-        head(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        head(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             return this.method("HEAD", path, listener);
         }
 
         /** Adds a listener function to the `PATCH` method. */
-        patch(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        patch(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             return this.method("PATCH", path, listener);
         }
 
         /** Adds a listener function to the `POST` method. */
-        post(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        post(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             return this.method("POST", path, listener);
         }
 
         /** Adds a listener function to the `PUT` method. */
-        put(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        put(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             return this.method("PUT", path, listener);
         }
 
         /** Adds a listener function to the all methods. */
-        all(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        all(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             for (let method of (<typeof Router>this.constructor).METHODS) {
                 this.method(method, path, listener);
             }
@@ -177,18 +183,19 @@ namespace webium {
         }
 
         /** An alias of `router.all()`. */
-        any(path: string, listener: (req: Request, res: Response, next: Function) => any): this {
+        any(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
             return this.all(path, listener);
         }
     }
 
     export class App extends Router {
 
-        options: AppOptions;
+        protected options: AppOptions;
 
         constructor(options?: AppOptions) {
             super();
             this.options = Object.assign({}, AppOptions, options);
+            this.caseSensitive = this.options.caseSensitive;
             options = Object.assign({ extended: true }, options);
             this.use(<any>bodyParser.urlencoded(<any>options))
                 .use(<any>bodyParser.json(<any>options));
@@ -200,53 +207,57 @@ namespace webium {
                 let enhanced = enhance(this.options)(_req, _res),
                     req = <Request>enhanced.req,
                     res = <Response>enhanced.res,
+                    hasStack = false,
                     hasListener = false;
 
                 req.app = this;
                 res.app = this;
 
-                for (let path in this.stacks) {
-                    if (path === "*") continue;
+                let i = 0;
+                let wrap = () => {
+                    i += 1;
+                    if (i === this.stacks.length)
+                        return void 0;
 
-                    let stacks = this.stacks[path],
-                        values = stacks.regexp.exec(req.url);
-                    if (values) {
-                        hasListener = true;
+                    let stack = this.stacks[i],
+                        values = stack.regexp.exec(req.url);
+                    if (!values)
+                        return wrap();
 
-                        if (stacks.listeners[req.method] === undefined ||
-                            stacks.listeners[req.method].length === 0) {
-                            res.status = 405;
-                            res.end(res.status);
-                            break;
-                        }
+                    hasStack = true;
 
+                    let listeners = stack.listeners[req.method];
+                    if (!listeners || listeners.length === 0)
+                        return wrap();
+
+                    hasListener = true;
+
+                    // Set/reset url params:
+                    req.params = {};
+                    if (stack.params.length > 0) {
                         values.shift();
-                        let i = -1,
-                            j = -1,
-                            listeners = stacks.listeners[req.method],
-                            next = () => {
-                                i += 1;
-                                if (i < listeners.length) {
-                                    return listeners[i].call(this, req, res, next);
-                                } else {
-                                    return void 0;
-                                }
-                            };
-
-                        // Set url params:
-                        req.params = {};
-                        for (let key of stacks.params) {
-                            j += 1;
-                            req.params[key.name] = values[j];
+                        for (let key of stack.params) {
+                            req.params[key.name] = values.shift();
                         }
-
-                        next();
-                        break;
                     }
-                }
 
-                if (!hasListener) {
+                    let j = -1;
+                    let next = () => {
+                        j += 1;
+                        if (j === listeners.length)
+                            return wrap();
+
+                        return listeners[j].call(this, req, res, next);
+                    };
+                    return next();
+                }
+                wrap();
+
+                if (!hasStack) {
                     res.status = 404;
+                    res.end(res.status);
+                } else if (!hasListener) {
+                    res.status = 405;
                     res.end(res.status);
                 }
             }

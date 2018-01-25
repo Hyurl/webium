@@ -1,4 +1,4 @@
-const { App } = require("./");
+const { App, Router } = require("./");
 
 var app = new App();
 
@@ -28,6 +28,19 @@ app.get("/async", async (req, res, next) => {
     }
 }).get("/async", async (req, res) => {
     return "Hello, Webium!";
+});
+
+var router = new Router();
+
+router.get("/another-router", (req, res)=>{
+    res.send("This is another router.");
+});
+
+app.use(router);
+
+// This route will match any URL.
+app.get("(.*)", (req, res) => {
+    res.send("Unknown route.");
 });
 
 app.listen(80);
