@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
 });
 
 // This route contains many features: using async/await, calling next() before
-// doing stuffs, returning value from the listener function and catching 
+// doing stuffs, returning value from the handler function and catching 
 // errors across the request life cycle.
 app.get("/async", async (req, res, next) => {
     try {
@@ -136,12 +136,16 @@ app.use(router);
 
 #### `router.use()`
 
-Adds a listener function to all routes, or concatenate another router.
+Adds a handler function to all routes, or concatenate another router.
 
 **signatures:**
 
-- `use(listener: (req: Request, res: Response, next: Function) => any): this`
+- `use(handler: RouteHandler): this`
 - `use(router: Router): this`
+
+The type `RouteHandler` is a function with this signature:
+
+- `(req: Request, res: Response: next(thisObj: any) => any) => any`
 
 ```javascript
 router.use((req, res, next) => {
@@ -154,13 +158,13 @@ router2.use(router);
 ```
 
 Be aware, if you `use` another router when the current one has same routes,
-only their listeners will be merged. If the routes in that router don't exist 
+only their handlers will be merged. If the routes in that router don't exist 
 in the current one, then references will be created, that means if you 
 modified the routes of that router, the current one will also be affected.
 
-#### `method(name: string, path: string, listener: (req: Request, res: Response, next: Function) => any): this`
+#### `method(name: string, path: string, handler: RouteHandler): this`
 
-Adds a listener function to a specified method and path.
+Adds a handler function to a specified method and path.
 
 ```javascript
 router.method("GET", "/", (req, res, next) => {
@@ -177,33 +181,33 @@ The `path` in `express` style, will be parsed by
 [path-to-regexp](https://github.com/pillarjs/path-to-regexp) module, you can 
 learn more details in its documentation.
 
-#### `delete(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
+#### `delete(path: string, handler: RouteHandler): this`
 
-Short-hand for `router.method("DELETE", path, listener)`.
+Short-hand for `router.method("DELETE", path, handler)`.
 
-#### `get(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
+#### `get(path: string, handler: RouteHandler): this`
 
-Short-hand for `router.method("GET", path, listener)`.
+Short-hand for `router.method("GET", path, handler)`.
 
-#### `head(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
+#### `head(path: string, handler: RouteHandler): this`
 
-Short-hand for `router.method("HEAD", path, listener)`.
+Short-hand for `router.method("HEAD", path, handler)`.
 
-#### `patch(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
+#### `patch(path: string, handler: RouteHandler): this`
 
-Short-hand for `router.method("PATCH", path, listener)`.
+Short-hand for `router.method("PATCH", path, handler)`.
 
-#### `post(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
+#### `post(path: string, handler: RouteHandler): this`
 
-Short-hand for `router.method("POST", path, listener)`.
+Short-hand for `router.method("POST", path, handler)`.
 
-#### `put(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
+#### `put(path: string, handler: RouteHandler): this`
 
-Short-hand for `router.method("PUT", path, listener)`.
+Short-hand for `router.method("PUT", path, handler)`.
 
-#### `all(path: string, listener: (req: Request, res: Response, next: Function) => any): this`
+#### `all(path: string, handler: RouteHandler): this`
 
-Adds a listener function to the all methods.
+Adds a handler function to the all methods.
 
 **alias:**
 
@@ -250,15 +254,15 @@ app.get("/", (req, res, next) => {
 
 Same `listen()` as [http.listen()](https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_server_listen).
 
-#### `listener`
+#### `handler`
 
-Returns the listener function for `http.Server()`, so you can use this module 
+Returns the handler function for `http.Server()`, so you can use this module 
 with `https`.
 
 ```javascript
 const { createServer } = require("https");
 
-createServer(app.listener).listen(443);
+createServer(app.handler).listen(443);
 ```
 
 ### Request
@@ -685,7 +689,42 @@ when you are sending buffers.
 
 ### About the next()
 
-The function `next` returns a wrapper of the next listener, when it is called,
-the returning value (if any) of the listener will be returned. This module 
+The function `next` returns a wrapper of the next handler, when it is called,
+the returning value (if any) of the handler will be returned. This module 
 will try to match as many routes as it can as long as you continue calling the
 `next()`, so you must not call it unless you know what you're doing.
+
+If you pass the `thisObj` to `next()`, then in the next handler function scope,
+the pseudo-variable `this` will be pointed to `thisObj`, except in an arrow 
+function, which always uses the origin `this` at where the function is defined.
+If no `thisObj` passed, then the default `this` is the `App` instance.
+
+Allowing you pass `thisObj` is meant to allow you bind a class method to the 
+route, which always requires the `this` context available. Please see the 
+following example:
+
+```javascript
+
+class Controller {
+    constructor() {
+        this.text = "Hello, World!";
+    }
+
+    index(req, res) {
+        res.send(this.text);
+    }
+}
+
+var app = new App;
+
+app.get("/", (req, res, next) => {
+    var ctrl = new Controller;
+    ctrl.text = "<h1>Response comes from a controller.</h1>";
+    next(ctrl);
+}).get("/", Controller.prototype.index);
+```
+
+If you calling `Controller.prototype.index(...args)` directly, nothing will be
+sent because there is no `this.text` at all. But using the mechanism of 
+`Controller.prototype.index.call(new Controller, ...args)`, it will work fine.
+The `next(new Controller)` is just doing the same thing for you internally.

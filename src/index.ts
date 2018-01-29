@@ -38,11 +38,13 @@ namespace webium {
         caseSensitive: false
     }
 
+    export type RouteHandler = (req: Request, res: Response, next: (thisObj?: any) => any) => any;
+
     export interface RouteStack {
         regexp: RegExp,
         params: pathToRegexp.Key[],
-        listeners: {
-            [method: string]: Array<(req: Request, res: Response, next: () => any) => any>
+        handlers: {
+            [method: string]: Array<RouteHandler>
         }
     }
 
@@ -64,7 +66,7 @@ namespace webium {
         protected stacks: RouteStack[] = [{
             regexp: null,
             params: [],
-            listeners: {}
+            handlers: {}
         }];
 
         protected caseSensitive: boolean;
@@ -76,12 +78,12 @@ namespace webium {
         constructor(caseSensitive = false) {
             this.caseSensitive = caseSensitive;
             for (let method of (<typeof Router>this.constructor).METHODS) {
-                this.stacks[0].listeners[method] = [];
+                this.stacks[0].handlers[method] = [];
             }
         }
 
-        /** Adds a listener function to all routes. */
-        use(listener: (req: Request, res: Response, next: () => any) => any): this;
+        /** Adds a handler function to all routes. */
+        use(handler: RouteHandler): this;
         /** Uses an existing router. */
         use(router: Router): this;
         use(arg) {
@@ -92,10 +94,10 @@ namespace webium {
                     if (j >= 0) {
                         let stack = router.stacks[i],
                             _stack = this.stacks[j];
-                        for (let method in stack.listeners) {
-                            _stack.listeners[method] = Object.assign(
-                                _stack.listeners[method] || [],
-                                stack.listeners[method]
+                        for (let method in stack.handlers) {
+                            _stack.handlers[method] = Object.assign(
+                                _stack.handlers[method] || [],
+                                stack.handlers[method]
                             );
                         }
                     } else {
@@ -105,8 +107,8 @@ namespace webium {
                 }
             } else if (arg instanceof Function) {
                 for (let i in this.stacks) {
-                    for (let method in this.stacks[i].listeners) {
-                        this.stacks[i].listeners[method].push(arg);
+                    for (let method in this.stacks[i].handlers) {
+                        this.stacks[i].handlers[method].push(arg);
                     }
                 }
             } else {
@@ -118,13 +120,13 @@ namespace webium {
         }
 
         /**
-         * Adds a listener function to a specified method and path.
+         * Adds a handler function to a specified method and path.
          * @param name GET, POST, HEAD, etc.
          * @param path The URL path.
          */
-        method(name: string, path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
-            if (typeof listener !== "function")
-                throw new TypeError("The listener must be a function.");
+        method(name: string, path: string, handler: RouteHandler): this {
+            if (typeof handler !== "function")
+                throw new TypeError("The handler must be a function.");
 
             let i = this.paths.indexOf(path);
             if (i === -1) {
@@ -136,58 +138,58 @@ namespace webium {
                         sensitive: this.caseSensitive
                     }),
                     params,
-                    listeners: {}
+                    handlers: {}
                 });
             }
-            if (this.stacks[i].listeners[name] === undefined) {
-                this.stacks[i].listeners[name] = Object.assign([], this.stacks[0].listeners[name]);
+            if (this.stacks[i].handlers[name] === undefined) {
+                this.stacks[i].handlers[name] = Object.assign([], this.stacks[0].handlers[name]);
             }
-            this.stacks[i].listeners[name].push(listener);
+            this.stacks[i].handlers[name].push(handler);
 
             return this;
         }
 
-        /** Adds a listener function to the `DELETE` method. */
-        delete(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
-            return this.method("DELETE", path, listener);
+        /** Adds a handler function to the `DELETE` method. */
+        delete(path: string, handler: RouteHandler): this {
+            return this.method("DELETE", path, handler);
         }
 
-        /** Adds a listener function to the `GET` method. */
-        get(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
-            return this.method("GET", path, listener);
+        /** Adds a handler function to the `GET` method. */
+        get(path: string, handler: RouteHandler): this {
+            return this.method("GET", path, handler);
         }
 
-        /** Adds a listener function to the `HEAD` method. */
-        head(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
-            return this.method("HEAD", path, listener);
+        /** Adds a handler function to the `HEAD` method. */
+        head(path: string, handler: RouteHandler): this {
+            return this.method("HEAD", path, handler);
         }
 
-        /** Adds a listener function to the `PATCH` method. */
-        patch(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
-            return this.method("PATCH", path, listener);
+        /** Adds a handler function to the `PATCH` method. */
+        patch(path: string, handler: RouteHandler): this {
+            return this.method("PATCH", path, handler);
         }
 
-        /** Adds a listener function to the `POST` method. */
-        post(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
-            return this.method("POST", path, listener);
+        /** Adds a handler function to the `POST` method. */
+        post(path: string, handler: RouteHandler): this {
+            return this.method("POST", path, handler);
         }
 
-        /** Adds a listener function to the `PUT` method. */
-        put(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
-            return this.method("PUT", path, listener);
+        /** Adds a handler function to the `PUT` method. */
+        put(path: string, handler: RouteHandler): this {
+            return this.method("PUT", path, handler);
         }
 
-        /** Adds a listener function to the all methods. */
-        all(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
+        /** Adds a handler function to the all methods. */
+        all(path: string, handler: RouteHandler): this {
             for (let method of (<typeof Router>this.constructor).METHODS) {
-                this.method(method, path, listener);
+                this.method(method, path, handler);
             }
             return this;
         }
 
         /** An alias of `router.all()`. */
-        any(path: string, listener: (req: Request, res: Response, next: () => any) => any): this {
-            return this.all(path, listener);
+        any(path: string, handler: RouteHandler): this {
+            return this.all(path, handler);
         }
     }
 
@@ -204,8 +206,8 @@ namespace webium {
                 .use(<any>bodyParser.json(<any>options));
         }
 
-        /** Returns the listener function for `http.Server()`. */
-        get listener(): (req: Request, res: Response) => void {
+        /** Returns the handler function for `http.Server()`. */
+        get handler(): (req: Request, res: Response) => void {
             return (_req: IncomingMessage, _res: ServerResponse) => {
                 let enhanced = enhance(this.options)(_req, _res),
                     req = <Request>enhanced.req,
@@ -229,8 +231,8 @@ namespace webium {
 
                     hasStack = true;
 
-                    let listeners = stack.listeners[req.method];
-                    if (!listeners || listeners.length === 0)
+                    let handlers = stack.handlers[req.method];
+                    if (!handlers || handlers.length === 0)
                         return wrap();
 
                     hasListener = true;
@@ -245,15 +247,17 @@ namespace webium {
                     }
 
                     let j = -1;
-                    let next = () => {
+                    let next = (thisObj?: any) => {
                         j += 1;
-                        if (j === listeners.length)
+                        if (j === handlers.length)
                             return wrap();
 
-                        return listeners[j].call(this, req, res, next);
+                        return handlers[j].call(thisObj || this, req, res, next);
                     };
+
                     return next();
                 }
+
                 wrap();
 
                 if (!hasStack) {
@@ -277,7 +281,7 @@ namespace webium {
         listen(handle: any, backlog?: number, listeningListener?: Function): this;
         listen(handle: any, listeningListener?: Function): this;
         listen(...args) {
-            createServer(this.listener).listen(...args);
+            createServer(this.handler).listen(...args);
             return this;
         }
     }
