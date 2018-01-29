@@ -160,7 +160,7 @@ var webium;
                     i += 1;
                     if (i === this.stacks.length)
                         return void 0;
-                    let stack = this.stacks[i], values = stack.regexp.exec(req.url);
+                    let stack = this.stacks[i], values = stack.regexp.exec(req.pathname);
                     if (!values)
                         return wrap();
                     hasStack = true;

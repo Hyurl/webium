@@ -223,7 +223,7 @@ namespace webium {
                         return void 0;
 
                     let stack = this.stacks[i],
-                        values = stack.regexp.exec(req.url);
+                        values = stack.regexp.exec(req.pathname);
                     if (!values)
                         return wrap();
 
