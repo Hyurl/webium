@@ -270,6 +270,11 @@ namespace webium {
             }
         }
 
+        /** An alias of `handler`. */
+        get listener() {
+            return this.handler;
+        }
+
         /** Same as `http.listen()`. */
         listen(port?: number, hostname?: string, backlog?: number, listeningListener?: Function): this;
         listen(port?: number, hostname?: string, listeningListener?: Function): this;
