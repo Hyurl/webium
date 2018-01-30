@@ -171,15 +171,17 @@ var webium;
                     }
                     return this.callNext(req, res, handlers, wrap);
                 };
-                this.callNext(req, res, this.middleware, wrap);
-                if (!hasStack) {
-                    res.status = 404;
-                    res.end(res.status);
-                }
-                else if (!hasListener) {
-                    res.status = 405;
-                    res.end(res.status);
-                }
+                Promise.resolve(this.callNext(req, res, this.middleware, wrap))
+                    .then(() => {
+                    if (!hasStack) {
+                        res.status = 404;
+                        res.end(res.status);
+                    }
+                    else if (!hasListener) {
+                        res.status = 405;
+                        res.end(res.status);
+                    }
+                });
             };
         }
         /** An alias of `handler`. */
