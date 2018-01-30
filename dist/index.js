@@ -196,6 +196,10 @@ var webium;
                 }
             };
         }
+        /** An alias of `handler`. */
+        get listener() {
+            return this.handler;
+        }
         listen(...args) {
             http_1.createServer(this.handler).listen(...args);
             return this;
