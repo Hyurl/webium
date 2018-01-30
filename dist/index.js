@@ -22,20 +22,17 @@ var webium;
          * @param caseSensitive Set the routes to be case-sensitive.
          */
         constructor(caseSensitive = false) {
-            this.paths = ["*"];
-            this.stacks = [{
-                    regexp: null,
-                    params: [],
-                    handlers: {}
-                }];
+            this.middleware = [];
+            this.paths = [];
+            this.stacks = [];
             this.caseSensitive = caseSensitive;
-            for (let method of this.constructor.METHODS) {
-                this.stacks[0].handlers[method] = [];
-            }
         }
         use(arg) {
             if (arg instanceof Router) {
                 let router = arg;
+                // Attach middleware
+                Object.assign(this.middleware, router.middleware);
+                // Attach routes
                 for (let i in router.paths) {
                     let j = this.paths.indexOf(router.paths[i]);
                     if (j >= 0) {
@@ -51,11 +48,7 @@ var webium;
                 }
             }
             else if (arg instanceof Function) {
-                for (let i in this.stacks) {
-                    for (let method in this.stacks[i].handlers) {
-                        this.stacks[i].handlers[method].push(arg);
-                    }
-                }
+                this.middleware.push(arg);
             }
             else {
                 throw new TypeError("The argument passed to '" +
@@ -86,7 +79,7 @@ var webium;
                 });
             }
             if (this.stacks[i].handlers[name] === undefined) {
-                this.stacks[i].handlers[name] = Object.assign([], this.stacks[0].handlers[name]);
+                this.stacks[i].handlers[name] = [];
             }
             this.stacks[i].handlers[name].push(handler);
             return this;
@@ -155,7 +148,7 @@ var webium;
                 let enhanced = enhance(this.options)(_req, _res), req = enhanced.req, res = enhanced.res, hasStack = false, hasListener = false;
                 req.app = this;
                 res.app = this;
-                let i = 0;
+                let i = -1;
                 let wrap = () => {
                     i += 1;
                     if (i === this.stacks.length)
@@ -176,16 +169,9 @@ var webium;
                             req.params[key.name] = values.shift();
                         }
                     }
-                    let j = -1;
-                    let next = (thisObj) => {
-                        j += 1;
-                        if (j === handlers.length)
-                            return wrap();
-                        return handlers[j].call(thisObj || this, req, res, next);
-                    };
-                    return next();
+                    return this.callNext(req, res, handlers, wrap);
                 };
-                wrap();
+                this.callNext(req, res, this.middleware, wrap);
                 if (!hasStack) {
                     res.status = 404;
                     res.end(res.status);
@@ -199,6 +185,17 @@ var webium;
         /** An alias of `handler`. */
         get listener() {
             return this.handler;
+        }
+        callNext(req, res, handlers, cb) {
+            let i = -1, $this = this;
+            function next(thisObj) {
+                i += 1;
+                if (i === handlers.length)
+                    return cb();
+                return handlers[i].call(thisObj || $this, req, res, next);
+            }
+            ;
+            return next();
         }
         listen(...args) {
             http_1.createServer(this.handler).listen(...args);

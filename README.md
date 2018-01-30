@@ -136,7 +136,7 @@ app.use(router);
 
 #### `router.use()`
 
-Adds a handler function to all routes, or concatenate another router.
+Adds a handler function as a middleware, or concatenate another router.
 
 **signatures:**
 
@@ -161,6 +161,9 @@ Be aware, if you `use` another router when the current one has same routes,
 only their handlers will be merged. If the routes in that router don't exist 
 in the current one, then references will be created, that means if you 
 modified the routes of that router, the current one will also be affected.
+
+Middleware are called before all routes, and when concatenating two routes, 
+middleware are always merged.
 
 #### `method(name: string, path: string, handler: RouteHandler): this`
 
@@ -254,7 +257,7 @@ app.get("/", (req, res, next) => {
 
 Same `listen()` as [http.listen()](https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_server_listen).
 
-#### `handler`
+#### `handler` or `listener`
 
 Returns the handler function for `http.Server()`, so you can use this module 
 with `https`.

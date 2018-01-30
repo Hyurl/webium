@@ -62,12 +62,9 @@ namespace webium {
             "TRACE"
         ];
 
-        protected paths: string[] = ["*"];
-        protected stacks: RouteStack[] = [{
-            regexp: null,
-            params: [],
-            handlers: {}
-        }];
+        protected middleware: RouteHandler[] = [];
+        protected paths: string[] = [];
+        protected stacks: RouteStack[] = [];
 
         protected caseSensitive: boolean;
 
@@ -77,18 +74,20 @@ namespace webium {
          */
         constructor(caseSensitive = false) {
             this.caseSensitive = caseSensitive;
-            for (let method of (<typeof Router>this.constructor).METHODS) {
-                this.stacks[0].handlers[method] = [];
-            }
         }
 
-        /** Adds a handler function to all routes. */
+        /** Adds a handler function as a middleware. */
         use(handler: RouteHandler): this;
         /** Uses an existing router. */
         use(router: Router): this;
         use(arg) {
             if (arg instanceof Router) {
                 let router = arg;
+
+                // Attach middleware
+                Object.assign(this.middleware, router.middleware);
+
+                // Attach routes
                 for (let i in router.paths) {
                     let j = this.paths.indexOf(router.paths[i]);
                     if (j >= 0) {
@@ -106,11 +105,7 @@ namespace webium {
                     }
                 }
             } else if (arg instanceof Function) {
-                for (let i in this.stacks) {
-                    for (let method in this.stacks[i].handlers) {
-                        this.stacks[i].handlers[method].push(arg);
-                    }
-                }
+                this.middleware.push(arg);
             } else {
                 throw new TypeError("The argument passed to '" +
                     this.constructor.name +
@@ -142,7 +137,7 @@ namespace webium {
                 });
             }
             if (this.stacks[i].handlers[name] === undefined) {
-                this.stacks[i].handlers[name] = Object.assign([], this.stacks[0].handlers[name]);
+                this.stacks[i].handlers[name] = [];
             }
             this.stacks[i].handlers[name].push(handler);
 
@@ -218,7 +213,7 @@ namespace webium {
                 req.app = this;
                 res.app = this;
 
-                let i = 0;
+                let i = -1;
                 let wrap = () => {
                     i += 1;
                     if (i === this.stacks.length)
@@ -226,6 +221,7 @@ namespace webium {
 
                     let stack = this.stacks[i],
                         values = stack.regexp.exec(req.pathname);
+
                     if (!values)
                         return wrap();
 
@@ -246,19 +242,10 @@ namespace webium {
                         }
                     }
 
-                    let j = -1;
-                    let next = (thisObj?: any) => {
-                        j += 1;
-                        if (j === handlers.length)
-                            return wrap();
-
-                        return handlers[j].call(thisObj || this, req, res, next);
-                    };
-
-                    return next();
+                    return this.callNext(req, res, handlers, wrap);
                 }
 
-                wrap();
+                this.callNext(req, res, this.middleware, wrap);
 
                 if (!hasStack) {
                     res.status = 404;
@@ -273,6 +260,20 @@ namespace webium {
         /** An alias of `handler`. */
         get listener() {
             return this.handler;
+        }
+
+        private callNext(req: Request, res: Response, handlers: RouteHandler[], cb: () => void) {
+            let i = -1,
+                $this = this;
+
+            function next(thisObj?: any) {
+                i += 1;
+                if (i === handlers.length)
+                    return cb();
+
+                return handlers[i].call(thisObj || $this, req, res, next);
+            };
+            return next();
         }
 
         /** Same as `http.listen()`. */

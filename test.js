@@ -32,7 +32,7 @@ app.get("/async", async (req, res, next) => {
 
 var router = new Router();
 
-router.get("/another-router", (req, res)=>{
+router.get("/another-router", (req, res) => {
     res.send("This is another router.");
 });
 
