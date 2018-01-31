@@ -156,11 +156,11 @@ var webium;
                         // send 404/405 response.
                         if (!hasStack) {
                             res.status = 404;
-                            res.send(res.status);
+                            this.onerror(res.status, req, res);
                         }
                         else if (!hasHandler) {
                             res.status = 405;
-                            res.end(res.status);
+                            this.onerror(res.status, req, res);
                         }
                         return void 0;
                     }
@@ -197,13 +197,35 @@ var webium;
                 i += 1;
                 if (i === handlers.length)
                     return cb();
-                return handlers[i].call(thisObj || $this, req, res, next);
+                try {
+                    return handlers[i].call(thisObj || $this, req, res, next);
+                }
+                catch (e) {
+                    $this.onerror(e, req, res);
+                }
             }
             return next();
         }
         listen(...args) {
             http_1.createServer(this.handler).listen(...args);
             return this;
+        }
+        /**
+         * If any error occurred, this method will be called, you can override
+         * it to make it satisfied to your needs.
+         */
+        onerror(err, req, res) {
+            if (res.statusCode === 404 || res.statusCode === 405) {
+                res.end(err);
+            }
+            else {
+                res.status = 500;
+                if (err instanceof Error)
+                    err = err.message;
+                else if (typeof err !== "string")
+                    err = res.status;
+                res.end(err);
+            }
         }
     }
     webium.App = App;
