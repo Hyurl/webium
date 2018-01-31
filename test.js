@@ -39,8 +39,8 @@ router.get("/another-router", (req, res) => {
 app.use(router);
 
 // This route will match any URL.
-app.get("(.*)", (req, res) => {
-    res.send("Unknown route.");
-});
+// app.get("(.*)", (req, res) => {
+//     res.send("Unknown route.");
+// });
 
 app.listen(80);

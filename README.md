@@ -731,20 +731,3 @@ If you calling `Controller.prototype.index(...args)` directly, nothing will be
 sent because there is no `this.text` at all. But using the mechanism of 
 `Controller.prototype.index.call(new Controller, ...args)`, it will work fine.
 The `next(new Controller)` is just doing the same thing for you internally.
-
-### How it works?
-
-This module will try to test all routes and find the first matched one before 
-running any handler functions, when the first one is found, the `for` loop 
-will `break` and prepare a recursive calling scope, running all middleware and
-route handlers as long as you continue calling `next()` as we talked above.
-
-If all routes has been tested and none is found, a **404** HTTP response will 
-be sent to the client, no middleware and handlers will be called in this case.
-If any route matched, but none of them is bound to the corresponding request 
-method, a **405** response will be sent instead, and no middleware and 
-handlers will be called.
-
-The design of this module is meant to test as less route as it can, and 
-running middleware and handlers only needed, so that save as many resources as 
-it can.
