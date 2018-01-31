@@ -208,31 +208,36 @@ namespace webium {
                     req = <Request>enhanced.req,
                     res = <Response>enhanced.res,
                     hasStack = false,
-                    hasListener = false;
+                    hasHandler = false,
+                    start = -1,
+                    originValues: string[];
+
+                // Find the first matched route.
+                for (let i in this.stacks) {
+                    let stack = this.stacks[i];
+
+                    originValues = stack.regexp.exec(req.pathname);
+
+                    if (originValues) {
+                        start = parseInt(i);
+                        hasStack = true;
+                        break;
+                    }
+                }
+
+                // All routes has been tested, and none is matched, send 404 
+                // response.
+                if (!hasStack) {
+                    res.status = 404;
+                    res.end(res.status);
+                    return void 0;
+                }
 
                 req.app = this;
                 res.app = this;
 
-                let i = -1;
-                let wrap = () => {
-                    i += 1;
-                    if (i === this.stacks.length)
-                        return void 0;
-
-                    let stack = this.stacks[i],
-                        values = stack.regexp.exec(req.pathname);
-
-                    if (!values)
-                        return wrap();
-
-                    hasStack = true;
-
-                    let handlers = stack.handlers[req.method];
-                    if (!handlers || handlers.length === 0)
-                        return wrap();
-
-                    hasListener = true;
-
+                let prepare = (stack: RouteStack, values: string[]) => {
+                    hasHandler = true;
                     // Set/reset url params:
                     req.params = {};
                     if (stack.params.length > 0) {
@@ -241,20 +246,56 @@ namespace webium {
                             req.params[key.name] = values.shift();
                         }
                     }
+                };
+                let i = start;
+                let wrap = () => {
+                    let stack: RouteStack,
+                        values: string[];
 
-                    return this.callNext(req, res, handlers, wrap);
+                    if (i === start && start !== -1) { // First matched route
+                        stack = this.stacks[i];
+                        values = originValues;
+                        i += 1;
+                    } else {
+                        i += 1;
+                        if (i === this.stacks.length) {
+                            // All routes has been tested, and none is matched
+                            // with proper http request method, send 405 
+                            // response.
+                            if (!hasHandler) {
+                                res.status = 405;
+                                res.end(res.status);
+                            }
+                            return void 0;
+                        }
+
+                        stack = this.stacks[i];
+                        values = stack.regexp.exec(req.pathname);
+                    }
+
+                    if (!values)
+                        return wrap();
+
+                    let handlers = stack.handlers[req.method];
+                    if (!handlers || handlers.length === 0)
+                        return wrap();
+
+                    if (!hasHandler) {
+                        // If the first matched route with proper request 
+                        // method is found, then call the middleware and 
+                        // handler functions.
+                        return this.callNext(req, res, this.middleware, () => {
+                            prepare(stack, values);
+                            return this.callNext(req, res, handlers, wrap);
+                        });
+                    } else {
+                        // Calling continuous handlers.
+                        prepare(stack, values);
+                        return this.callNext(req, res, handlers, wrap);
+                    }
                 }
 
-                Promise.resolve(this.callNext(req, res, this.middleware, wrap))
-                    .then(() => {
-                        if (!hasStack) {
-                            res.status = 404;
-                            res.end(res.status);
-                        } else if (!hasListener) {
-                            res.status = 405;
-                            res.end(res.status);
-                        }
-                    });
+                wrap();
             }
         }
 
@@ -263,7 +304,7 @@ namespace webium {
             return this.handler;
         }
 
-        private callNext(req: Request, res: Response, handlers: RouteHandler[], cb: () => void) {
+        private callNext(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
             let i = -1,
                 $this = this;
 
@@ -273,7 +314,8 @@ namespace webium {
                     return cb();
 
                 return handlers[i].call(thisObj || $this, req, res, next);
-            };
+            }
+
             return next();
         }
 
