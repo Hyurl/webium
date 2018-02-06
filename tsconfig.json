@@ -6,6 +6,7 @@
         "rootDir": "src/",
         "outDir": "dist/",
         "newLine": "LF",
+        "removeComments": true,
         "lib": [
             "es2015",
             "es2016.array.include"

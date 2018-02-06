@@ -107,9 +107,9 @@ namespace webium {
             } else if (arg instanceof Function) {
                 this.middleware.push(arg);
             } else {
-                throw new TypeError("The argument passed to '" +
+                throw new TypeError("The argument passed to " +
                     this.constructor.name +
-                    ".use()' must be a function or an instance of Router.");
+                    ".use() must be a function or an instance of Router.");
             }
             return this;
         }
