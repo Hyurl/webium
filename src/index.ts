@@ -203,8 +203,10 @@ namespace webium {
 
         /** Returns the handler function for `http.Server()`. */
         get handler(): (req: Request, res: Response) => void {
+            let enhances = enhance(this.options);
+            
             return (_req: IncomingMessage, _res: ServerResponse) => {
-                let enhanced = enhance(this.options)(_req, _res),
+                let enhanced = enhances(_req, _res),
                     req = <Request>enhanced.req,
                     res = <Response>enhanced.res,
                     hasStack = false,

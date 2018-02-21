@@ -124,8 +124,9 @@ var webium;
                 .use(bodyParser.json(options));
         }
         get handler() {
+            let enhances = enhance(this.options);
             return (_req, _res) => {
-                let enhanced = enhance(this.options)(_req, _res), req = enhanced.req, res = enhanced.res, hasStack = false, hasHandler = false;
+                let enhanced = enhances(_req, _res), req = enhanced.req, res = enhanced.res, hasStack = false, hasHandler = false;
                 req.app = this;
                 res.app = this;
                 let i = -1;
@@ -201,3 +202,4 @@ var webium;
     webium.App = App;
 })(webium || (webium = {}));
 module.exports = webium;
+//# sourceMappingURL=index.js.map
