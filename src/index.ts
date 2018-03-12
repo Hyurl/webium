@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import * as enhance from "enhance-req-res";
 import * as pathToRegexp from "path-to-regexp";
 import { createServer, IncomingMessage, ServerResponse } from "http";
@@ -204,7 +205,7 @@ namespace webium {
         /** Returns the handler function for `http.Server()`. */
         get handler(): (req: Request, res: Response) => void {
             let enhances = enhance(this.options);
-            
+
             return (_req: IncomingMessage, _res: ServerResponse) => {
                 let enhanced = enhances(_req, _res),
                     req = <Request>enhanced.req,
@@ -218,7 +219,7 @@ namespace webium {
                 let i = -1;
                 let wrap = () => {
                     i += 1;
-                    if (i === this.stacks.length) {
+                    if (i == this.stacks.length) {
                         // All routes has been tested, and none is matched, 
                         // send 404/405 response.
                         if (!hasStack) {
@@ -228,6 +229,8 @@ namespace webium {
                             res.status = 405;
                             this.onerror(res.status, req, res);
                         }
+                        return void 0;
+                    } else if (i > this.stacks.length) {
                         return void 0;
                     }
 
@@ -256,7 +259,7 @@ namespace webium {
 
                     // Calling handlers.
                     return this.callNext(req, res, handlers, wrap);
-                }
+                };
 
                 // Calling middleware.
                 this.callNext(req, res, this.middleware, wrap);
@@ -269,20 +272,22 @@ namespace webium {
         }
 
         private callNext(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
-            let i = -1,
-                $this = this;
-
-            function next(thisObj?: any) {
+            let lastCalledIndex;
+            let i = -1;
+            let next = (thisObj?: any) => {
                 i += 1;
+
                 if (i === handlers.length)
                     return cb();
+                else if (i > handlers.length)
+                    return void 0;
 
                 try {
-                    return handlers[i].call(thisObj || $this, req, res, next);
+                    return handlers[i].call(thisObj || this, req, res, next);
                 } catch (e) {
-                    $this.onerror(e, req, res);
+                    this.onerror(e, req, res);
                 }
-            }
+            };
 
             return next();
         }

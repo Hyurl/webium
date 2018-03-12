@@ -1,4 +1,5 @@
 "use strict";
+require("source-map-support/register");
 const enhance = require("enhance-req-res");
 const pathToRegexp = require("path-to-regexp");
 const http_1 = require("http");
@@ -132,7 +133,7 @@ var webium;
                 let i = -1;
                 let wrap = () => {
                     i += 1;
-                    if (i === this.stacks.length) {
+                    if (i == this.stacks.length) {
                         if (!hasStack) {
                             res.status = 404;
                             this.onerror(res.status, req, res);
@@ -141,6 +142,9 @@ var webium;
                             res.status = 405;
                             this.onerror(res.status, req, res);
                         }
+                        return void 0;
+                    }
+                    else if (i > this.stacks.length) {
                         return void 0;
                     }
                     let stack = this.stacks[i], values = stack.regexp.exec(req.pathname);
@@ -167,18 +171,21 @@ var webium;
             return this.handler;
         }
         callNext(req, res, handlers, cb) {
-            let i = -1, $this = this;
-            function next(thisObj) {
+            let lastCalledIndex;
+            let i = -1;
+            let next = (thisObj) => {
                 i += 1;
                 if (i === handlers.length)
                     return cb();
+                else if (i > handlers.length)
+                    return void 0;
                 try {
-                    return handlers[i].call(thisObj || $this, req, res, next);
+                    return handlers[i].call(thisObj || this, req, res, next);
                 }
                 catch (e) {
-                    $this.onerror(e, req, res);
+                    this.onerror(e, req, res);
                 }
-            }
+            };
             return next();
         }
         listen(...args) {
