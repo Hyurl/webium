@@ -275,9 +275,9 @@ The Request interface extends IncomingMessage with more properties and methods.
 Some of these properties are read-only for security reasons, that means you 
 won't be able to modified them.
 
-- `URL` An object parsed by `url` module for both new API and legacy API.
-    be aware of `URL.auth`, which is actually sent by http 
-    `Basic Authendication`.  
+- `urlObj` An object parsed by [url6](https://github.com/hyurl/url6) module. 
+    Be aware of `urlObj.auth`, which is actually sent by http 
+    `Basic Authendication`.
 - `time` Request time, not really connection time, but the moment this 
     module performs actions.
 - `proxy` If the client requested via a proxy server, this property will be 
@@ -302,12 +302,11 @@ won't be able to modified them.
 - `path` Full requested path (with `search`).
 - `pathname` Directory part of requested path (without `search`).
 - `search` The requested URL `search` string, with a leading `?`.
-- `query` Parsed URL query object, if you want to get original string, use 
-    `URL.query` instead.
+- `query` Parsed URL query object.
 - `href` Full requested URL string (without `hash`, which is not sent by the 
     client).
 - `referer` Equivalent to `headers.referer`.
-- `origin` Reference to `headers.origin` or `URL.origin`.
+- `origin` Reference to `headers.origin` or `urlObj.origin`.
 - `type` The `Content-Type` requested body (without `charset`).
 - `charset` The requested body's `charset`, or the first accepted charset 
     (`charsets[0]`), assume they both use a same charset. Unlinke other 
@@ -342,7 +341,7 @@ won't be able to modified them.
     If pass, returns the first matched type.
 
 ```javascript
-console.log(req.URL);
+console.log(req.urlObj);
 console.log(req.ip);
 console.log(req.host);
 console.log(req.subdomain);
