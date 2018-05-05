@@ -6,9 +6,7 @@ const http_1 = require("http");
 const bodyParser = require("body-parser");
 var webium;
 (function (webium) {
-    class Cookie extends enhance.Cookie {
-    }
-    webium.Cookie = Cookie;
+    webium.Cookie = enhance.Cookie;
     webium.AppOptions = {
         domain: "",
         useProxy: false,
@@ -189,7 +187,11 @@ var webium;
             return next();
         }
         listen(...args) {
-            http_1.createServer(this.handler).listen(...args);
+            this.server = http_1.createServer(this.handler).listen(...args);
+            return this;
+        }
+        close() {
+            this.server.close();
             return this;
         }
         onerror(err, req, res) {

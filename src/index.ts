@@ -6,7 +6,7 @@ import * as net from "net";
 import * as bodyParser from "body-parser";
 
 namespace webium {
-    export class Cookie extends enhance.Cookie { }
+    export const Cookie = enhance.Cookie;
 
     export interface Request extends enhance.Request {
         app: App;
@@ -192,6 +192,7 @@ namespace webium {
     export class App extends Router {
 
         protected options: AppOptions;
+        server: net.Server;
 
         constructor(options?: AppOptions) {
             super();
@@ -248,7 +249,7 @@ namespace webium {
 
                     hasHandler = true;
 
-                    // Set/reset url params:
+                    // Set/reset URL params:
                     req.params = {};
                     if (stack.params.length > 0) {
                         values.shift();
@@ -303,7 +304,13 @@ namespace webium {
         listen(handle: any, backlog?: number, listeningListener?: Function): this;
         listen(handle: any, listeningListener?: Function): this;
         listen(...args) {
-            createServer(this.handler).listen(...args);
+            this.server = createServer(this.handler).listen(...args);
+            return this;
+        }
+
+        /** Closes the server started by `app.listen()`. */
+        close(): this {
+            this.server.close();
             return this;
         }
 

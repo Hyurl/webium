@@ -257,6 +257,10 @@ app.get("/", (req, res, next) => {
 
 Same `listen()` as [http.listen()](https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_server_listen).
 
+#### `close()`
+
+Closes the server started by `app.listen()`.
+
 #### `handler` or `listener`
 
 Returns the handler function for `http.Server()`, so you can use this module 
