@@ -16,7 +16,7 @@ namespace webium {
          * Request body parsed by `body-parser`. By default, webium only 
          * parses `urlencoded` and JSON string.
          */
-        body: string | Buffer | { [x: string]: any };
+        body: any;
     }
 
     export interface Response extends enhance.Response {
