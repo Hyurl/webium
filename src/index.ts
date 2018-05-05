@@ -12,8 +12,11 @@ namespace webium {
         app: App;
         /** The URL parameters. */
         params: { [x: string]: string };
-        /** Request body parsed by `body-parser`. */
-        body: { [x: string]: any };
+        /**
+         * Request body parsed by `body-parser`. By default, webium only 
+         * parses `urlencoded` and JSON string.
+         */
+        body: string | Buffer | { [x: string]: any };
     }
 
     export interface Response extends enhance.Response {
