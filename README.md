@@ -6,14 +6,16 @@ This module adds additional properties and methods to the corresponding `req`
 and `res` objects in a http server, and enhance abilities of the program.
 The program for enhancement has been separated as an individual module 
 [enhance-req-res](https://github.com/hyurl/enhance-req-res), which will work 
-with other frameworks or the internal Node.js http server, you can check it 
-out if you want.
+with other frameworks or the internal Node.js http/https/http2 server, you can
+check it out if you want.
 
 It has both `express` style and `koa` style, but in a very different way, and 
 only keeps very few and useful methods.
 
 This module is compatible to most of `connect` and `express` middleware, so 
 you can use them instead.
+
+Since version 0.3.5, This module supports Node.js internal HTTP2 server.
 
 ## Install
 

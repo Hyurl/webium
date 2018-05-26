@@ -180,7 +180,7 @@ function listeningListener(outerServer) {
             if (outerServer) {
                 app.server = http.createServer(app.listener).listen(3000, listeningListener(false));
             } else {
-                console.log("All tests passed!");
+                console.log("#### OK ####");
             }
         }).catch((err) => {
             app.close();
