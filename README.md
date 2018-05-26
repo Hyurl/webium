@@ -15,7 +15,8 @@ only keeps very few and useful methods.
 This module is compatible to most of `connect` and `express` middleware, so 
 you can use them instead.
 
-Since version 0.3.5, This module supports Node.js internal HTTP2 server.
+Since version 0.3.5, This module is compatible to Node.js internal HTTP2 
+server.
 
 ## Install
 
