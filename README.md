@@ -15,7 +15,7 @@ only keeps very few and useful methods.
 This module is compatible to most of `connect` and `express` middleware, so 
 you can use them instead.
 
-Since version 0.3.5, This module is compatible to Node.js internal HTTP2 
+Since version 0.3.5, This module is compatible to Node.js internal **HTTP2** 
 server.
 
 ## Install
@@ -266,22 +266,49 @@ Closes the server started by `app.listen()`.
 
 #### `handler` or `listener`
 
-Returns the handler function for `http.Server()`, so you can use this module 
-with `https`.
+Returns the handler function for http/https/http2 server, you can use it with 
+`https` and/or `http2`.
+
+HTTPS
 
 ```javascript
 const { createServer } = require("https");
 
-createServer(app.handler).listen(443);
+createServer(app.listener).listen(443);
+```
+
+HTTP/2
+
+```javascript
+const { createSecureServer } = require("http2");
+
+createSecureServer(app.listener).listen(443);
+```
+
+#### `onerror(err: any, req: Request, res: Response)`
+
+If any error occurred, this method will be called, you can override this 
+method to make it satisfied to your needs.
+
+```javascript
+var app = new App();
+
+// If the default function doesn't fulfill your needs, you can simply just 
+// overwrite it.
+app.onerror = function (err, req, res) {
+    // ...
+};
 ```
 
 ### Request
 
-The Request interface extends IncomingMessage with more properties and methods.
+The Request interface extends IncomingMessage/Http2ServerRequest with more 
+properties and methods.
 
 Some of these properties are read-only for security reasons, that means you 
 won't be able to modified them.
 
+- `stream` The Http2Stream object backing the request (only for http2).
 - `urlObj` An object parsed by [url6](https://github.com/hyurl/url6) module. 
     Be aware of `urlObj.auth`, which is actually sent by http 
     `Basic Authendication`.
@@ -316,7 +343,7 @@ won't be able to modified them.
 - `origin` Reference to `headers.origin` or `urlObj.origin`.
 - `type` The `Content-Type` requested body (without `charset`).
 - `charset` The requested body's `charset`, or the first accepted charset 
-    (`charsets[0]`), assume they both use a same charset. Unlinke other 
+    (`charsets[0]`), assume they both use a same charset. Unlike other 
     properties, If you set this one to a valid charset, it will be used to 
     decode request body.
 - `charsets` An array carries all `Accept-Charset`s, ordered by `q`ualities.
@@ -359,10 +386,19 @@ console.log(req.lang);
 
 ### Response
 
-The Response interface extends ServerResponse with more properties and methods.
+The Response interface extends ServerResponse/Http2ServerResponse with more 
+properties and methods.
 
 Most of its properties are setters/getters, if you assign a new value to 
 them, that will actually mean something.
+
+#### `stream` - The Http2Stream object backing the response (only for http2)
+
+This property is read-only.
+
+```javascript
+res.stream.push("some thing");
+```
 
 #### `code` - Set/Get status code.
 

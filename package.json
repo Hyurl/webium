@@ -1,6 +1,6 @@
 {
   "name": "webium",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "A minimal web framework with middleware and routes.",
   "main": "dist/index.js",
   "types": "src/index.ts",
@@ -12,7 +12,10 @@
   },
   "keywords": [
     "framework",
-    "webium"
+    "http",
+    "https",
+    "http2",
+    "server"
   ],
   "author": {
     "name": "Ayon Lee",
@@ -33,7 +36,7 @@
     "@types/body-parser": "^1.17.0",
     "@types/node": "^9.6.18",
     "body-parser": "^1.18.3",
-    "enhance-req-res": "^0.4.5",
+    "enhance-req-res": "^0.4.6",
     "path-to-regexp": "^2.2.1",
     "source-map-support": "^0.5.6"
   },

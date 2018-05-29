@@ -319,7 +319,7 @@ namespace webium {
 
         /**
          * If any error occurred, this method will be called, you can override
-         * it to make it satisfied to your needs.
+         * this method to make it satisfied to your needs.
          */
         onerror(err: any, req: Request, res: Response) {
             if (res.statusCode === 404 || res.statusCode === 405) {
