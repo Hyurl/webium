@@ -23,12 +23,7 @@ namespace webium {
         app: App;
     }
 
-    export interface AppOptions {
-        domain?: string | string[];
-        useProxy?: boolean;
-        capitalize?: boolean;
-        cookieSecret?: string;
-        jsonp?: string | false;
+    export interface AppOptions extends enhance.Options {
         caseSensitive?: boolean;
         [x: string]: any
     }

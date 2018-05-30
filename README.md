@@ -1,6 +1,6 @@
 # Webium
 
-**A minimal web framework with middleware and routes.**
+**A minimal web framework with middleware and routes.** [中文](./README.zh-CN.md)
 
 This module adds additional properties and methods to the corresponding `req` 
 and `res` objects in a http server, and enhance abilities of the program.
@@ -9,13 +9,11 @@ The program for enhancement has been separated as an individual module
 with other frameworks or the internal Node.js http/https/http2 server, you can
 check it out if you want.
 
-It has both `express` style and `koa` style, but in a very different way, and 
-only keeps very few and useful methods.
+This module has both `express` style and `koa` style, but only keeps very few 
+and useful methods. It is compatible to most well-known `connect` and `express` 
+middleware, so you can use them instead.
 
-This module is compatible to most of `connect` and `express` middleware, so 
-you can use them instead.
-
-Since version 0.3.5, This module is compatible to Node.js internal **HTTP2** 
+Since version 0.3.5, this package is compatible to Node.js internal **HTTP2** 
 server.
 
 ## Install
@@ -75,14 +73,12 @@ app.get("(.*)", (req, res) => {
 app.listen(80);
 ```
 
-You can use `npm test` to test this code after downloading.
-
 ## API
 
 ### webium
 
 A namespace that contains classes `App`, `Router` and `Cookie`, while the 
-`Cookie` comes from [sfn-cookie](https://www.npmjs.com/package/sfn-cookie),
+`Cookie` comes from [sfn-cookie](https://github.com/hyurl/sfn-cookie),
 and the `App` inherited `Router`.
 
 ```javascript
@@ -107,12 +103,6 @@ const { App, Router, Cookie } = require("webium");
 - `new Cookie(options: object)`
 - `cookie.toString()` Gets the serialized cookie string of the current 
     instance.
-- `Cookie.parse(str: string): Cookie` Parses a cookie string to a Cookie 
-    instance. If `str` is invalid, a `null` will be returned.
-- `Cookie.parseMany(str: string): Cookie[]` Parses a string as multiple 
-    cookies, useful for parsing `document.cookie` and `req.headers.cookie`.
-- `Cookie.serialize(data: Cookie|object): string` Serializes an object or 
-    Cookie instance to a valid cookie string.
 
 ```javascript
 var cookie1 = new Cookie("username=Luna"),
@@ -126,13 +116,16 @@ var cookie1 = new Cookie("username=Luna"),
 
 #### `new Router(caseSensitive?: boolean)`
 
-Creates a new router that can be used by the `App`.
+Creates a new router that can be used by the `App`. If `caseSensitive` is 
+`true`, when analyzing URL, the program will check it case-sensitively.
 
 ```javascript
 const { App, Router } = require("webium");
 
 var app = new App,
     router = new Router;
+
+// ...
 
 app.use(router);
 ```
@@ -233,13 +226,15 @@ Interface `AppOptions` includes:
     `req.host`, will firstly try to get info from proxy, default: `false`.
 - `capitalize` Auto-capitalize response headers when setting, default: `true`.
 - `cookieSecret` A secret key to sign/unsign cookie values.
-- `jsonp` Set a default jsonp callback name if you want.
+- `jsonp` Set a query name for jsonp callback if needed. If `true` is set, 
+    then the query name will be `jsonp`. In the query string, using the style
+    `jsonp=callback` to request jsonp response.
 - `caseSensitive` Set the routes to be case-sensitive.
 
-This module also automatically parses request body if the Content-Type is 
+This module also automatically parses request body if the `Content-Type` is 
 `application/x-www-form-urlencoded` or `application/json` by using 
-`body-parser`, so other configs worked with `body-parser` can also be set to 
-`options`.
+[body-parser](https://github.com/expressjs/body-parser) module, so other 
+options worked with `body-parser` can also be set to `options`.
 
 ```javascript
 var app = new App();
@@ -258,7 +253,7 @@ app.get("/", (req, res, next) => {
 
 #### `listen()`
 
-Same `listen()` as [http.listen()](https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_server_listen).
+Please check [http.listen()](https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_server_listen).
 
 #### `close()`
 
@@ -282,7 +277,7 @@ HTTP/2
 ```javascript
 const { createSecureServer } = require("http2");
 
-createSecureServer(app.listener).listen(443);
+createSecureServer(tlsOptions, app.listener).listen(443);
 ```
 
 #### `onerror(err: any, req: Request, res: Response)`
@@ -302,24 +297,24 @@ app.onerror = function (err, req, res) {
 
 ### Request
 
-The Request interface extends IncomingMessage/Http2ServerRequest with more 
-properties and methods.
+The `Request` interface extends `IncomingMessage`/`Http2ServerRequest` with 
+more properties and methods.
 
 Some of these properties are read-only for security reasons, that means you 
 won't be able to modified them.
 
-- `stream` The Http2Stream object backing the request (only for http2).
-- `urlObj` An object parsed by [url6](https://github.com/hyurl/url6) module. 
-    Be aware of `urlObj.auth`, which is actually sent by http 
-    `Basic Authendication`.
+- `stream` The `Http2Stream` object backing the request (only for http2).
+- `urlObj` An object parsed by [url6](https://github.com/hyurl/url6) module 
+    that contains URL information. Be aware of `urlObj.auth`, which is 
+    actually sent by http `Basic Authendication`.
 - `time` Request time, not really connection time, but the moment this 
     module performs actions.
 - `proxy` If the client requested via a proxy server, this property will be 
     set, otherwise it's `null`. If available, it may contain these properties:
     - `protocol` The client's real request protocol (`x-forwarded-proto`).
     - `host` The real host that client trying to request (`x-forwarded-host`).
-    - `ip`: The real IP of client (`ips[0]`).
-    - `ips`: An array carries all IP addresses, includes client IP and proxy 
+    - `ip` The real IP of client (`ips[0]`).
+    - `ips` An array carries all IP addresses, includes client IP and proxy 
         server IPs (`x-forwarded-for`).
 - `auth` Authentication of the client, it could be `null`, or an object 
     carries `{ username, password }`.
@@ -341,7 +336,7 @@ won't be able to modified them.
     client).
 - `referer` Equivalent to `headers.referer`.
 - `origin` Reference to `headers.origin` or `urlObj.origin`.
-- `type` The `Content-Type` requested body (without `charset`).
+- `type` The `Content-Type` of requested body (without `charset`).
 - `charset` The requested body's `charset`, or the first accepted charset 
     (`charsets[0]`), assume they both use a same charset. Unlike other 
     properties, If you set this one to a valid charset, it will be used to 
@@ -352,7 +347,7 @@ won't be able to modified them.
 - `cookies` An object carries all parsed cookies sent by the client.
 - `params` The URL parameters.
 - `body` An object carries requested body parsed by 
-    [body-parser](https://www.npmjs.com/package/body-parser). Remember, only
+    [body-parser](https://github.com/expressjs/body-parser). Remember, only
     `json` and `x-www-form-urlencoded` are parsed by default.
 - `ip` The real client IP, if `useProxy` is `true`, then trying to use 
     `proxy`'s `ip` first.
@@ -386,13 +381,13 @@ console.log(req.lang);
 
 ### Response
 
-The Response interface extends ServerResponse/Http2ServerResponse with more 
-properties and methods.
+The `Response` interface extends `ServerResponse`/`Http2ServerResponse` with 
+more properties and methods.
 
 Most of its properties are setters/getters, if you assign a new value to 
 them, that will actually mean something.
 
-#### `stream` - The Http2Stream object backing the response (only for http2)
+#### `stream` - The `Http2Stream` object backing the response (only for http2)
 
 This property is read-only.
 
@@ -546,7 +541,7 @@ if (res.modified) {
 
 #### `headers` - Set/Get response headers.
 
-This property is a Proxy instance, you can only manipulate its properties to 
+This property is a `Proxy` instance, you can only manipulate its properties to 
 set headers.
 
 ```javascript
@@ -647,8 +642,8 @@ if(!req.auth){ // Require authendication if haven't.
 
 #### `unauth()` - Clears authentication.
 
-Since browsers clear authentication while responsed `401 Unauthorized`, so 
-this method is exactly the same as `req.auth()`, only more readable.
+Since browsers clear authentication while respond `401 Unauthorized`, so 
+this method is exactly the same as `res.auth()`, only more readable.
 
 #### `redirect(url, code?: 301 | 302)` - Redirects the request to a specified URL.
 
@@ -663,11 +658,12 @@ res.redirect(-1);
 This method will automatically perform type checking, If `data` is a buffer, 
 the `res.type` will be set to `application/octet-stream`; if `data` is an 
 object (or array), `res.type` will be set to `application/json`; if `data` is 
-a string, the program will detect if it's `text/plain` `text/html`, 
+a string, the program will detect if it's `text/plain`, `text/html`, 
 `application/xml`, or `application/json`.
 
-This method also check if a response body has been modified or not, if 
-`res.modified` is `false`, a `304 Not Modified` with no body will be sent.
+This method also check if a response body has been modified since the last 
+time, if `res.modified` is `false`, a `304 Not Modified` with no body will be 
+sent.
 
 ```javascript
 res.send("Hello, World!"); // text/plain
@@ -679,8 +675,9 @@ res.send(Buffer.from("Hello, World!")); // application/octet-stream
 ```
 
 This method could send jsonp response as well, if `res.jsonp` is set, or 
-`options.jsonp` for `enhance()` is set and the query matches, a jsonp response
-will be sent, and the `res.type` will be set to `application/javascript`.
+`options.jsonp` for the application is set and the query matches, a jsonp 
+response will be sent, and the `res.type` will be set to 
+`application/javascript`.
 
 ```javascript
 res.jsonp = "callback";
@@ -719,8 +716,8 @@ Other forms:
 The callback function, will be called after the response has been sent, or 
 failed.
 
-Other than downloading a real file, you can perform downloading a string by 
-using `res.attachment` and `res.send()`.
+Other than downloading a real file, you can perform downloading a string as a 
+text file by using `res.attachment` and `res.send()`.
 
 ```javascript
 // This content will be downloaded using the name 'example.html':
@@ -728,7 +725,7 @@ res.attachment = "example.html";
 res.send("<p>Hello, World!</p>");
 ```
 
-Worth mentioned, if you use `res.send()` to send a Buffer, most browsers will 
+Worth mentioned, if you use `res.send()` to send a buffer, most browsers will 
 download the buffer as a file, so it's always better to set `res.attachment` 
 when you are sending buffers.
 
