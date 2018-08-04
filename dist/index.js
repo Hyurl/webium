@@ -169,7 +169,6 @@ var webium;
             return this.handler;
         }
         callNext(req, res, handlers, cb) {
-            let lastCalledIndex;
             let i = -1;
             let next = (thisObj) => {
                 i += 1;

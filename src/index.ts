@@ -271,7 +271,6 @@ namespace webium {
         }
 
         private callNext(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
-            let lastCalledIndex;
             let i = -1;
             let next = (thisObj?: any) => {
                 i += 1;
