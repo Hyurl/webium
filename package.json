@@ -35,7 +35,7 @@
   "dependencies": {
     "@types/body-parser": "^1.17.0",
     "body-parser": "^1.18.3",
-    "enhance-req-res": "^0.4.8",
+    "enhance-req-res": "^0.4.9",
     "path-to-regexp": "^2.2.1",
     "source-map-support": "^0.5.6"
   },
