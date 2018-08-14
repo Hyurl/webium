@@ -395,21 +395,21 @@ This property is read-only.
 res.stream.push("some thing");
 ```
 
-#### `code` - Set/Get status code.
+#### `code` - Sets/Gets status code.
 
 ```javascript
 res.code = 200;
 console.log(res.code); // => 200
 ```
 
-#### `message` - Set/Get status message.
+#### `message` - Sets/Gets status message.
 
 ```javascript
 res.message = "OK";
 console.log(res.message); // => OK
 ```
 
-#### `status` - Set/Get both status code and message.
+#### `status` - Sets/Gets both status code and message.
 
 ```javascript
 res.status = 200;
@@ -421,7 +421,7 @@ console.log(res.code); // => 200
 console.log(res.message); // => Everything works fine.
 ```
 
-#### `type` - Set/Get `Content-Type` without `charset` part.
+#### `type` - Sets/Gets `Content-Type` without `charset` part.
 
 ```javascript
 res.type = "text/html";
@@ -429,35 +429,35 @@ res.type = "html"; // Will auto lookup to text/html.
 console.log(res.type); // => text/html
 ```
 
-#### `charset` - Set/Get `Content-Type` only with `charset` part.
+#### `charset` - Sets/Gets `Content-Type` only with `charset` part.
 
 ```javascript
 res.charset = "UTF-8";
 console.log(res.charset); // => UTF-8
 ```
 
-#### `length` Set/Get `Content-Length`.
+#### `length` Sets/Gets `Content-Length`.
 
 ```javascript
 res.length = 12;
 console.log(res.length); // => 12
 ```
 
-#### `encoding` Set/Get `Content-Encoding`.
+#### `encoding` Sets/Gets `Content-Encoding`.
 
 ```javascript
 res.encoding = "gzip";
 console.log(res.encoding); // => gzip
 ```
 
-#### `date` - Set/Get `Date`.
+#### `date` - Sets/Gets `Date`.
 
 ```javascript
 res.date = new Date(); // You can set a date string or Date instance.
 console.log(res.date); // => Fri, 15 Dec 2017 04:13:17 GMT
 ```
 
-#### `etag` Set/Get - `Etag`.
+#### `etag` Sets/Gets - `Etag`.
 
 This properties is internally used when calling `res.send()`, if you don't use
 `res.send()`, you can call it manually.
@@ -470,21 +470,21 @@ res.etag = etag(body);
 console.log(res.etag); // => d-CgqfKmdylCVXq1NV12r0Qvj2XgE
 ```
 
-#### `lastModified` - Set/Get `Last-Modified`.
+#### `lastModified` - Sets/Gets `Last-Modified`.
 
 ```javascript
 res.lastModified = new Date(2017); // You can set a date string or Date instance.
 console.log(res.lastModified); // => Thu, 01 Jan 1970 00:00:02 GMT
 ```
 
-#### `location` - Set/Get `Location`.
+#### `location` - Sets/Gets `Location`.
 
 ```javascript
 res.location = "/login";
 console.log(res.location); // => /login
 ```
 
-#### `refresh` - Set/Get `Refresh` in a number of seconds.
+#### `refresh` - Sets/Gets `Refresh` in a number of seconds.
 
 ```javascript
 res.refresh = 3; // The page will auto-refresh in 3 seconds.
@@ -492,14 +492,14 @@ res.refresh = "3; URL=/logout"; // Auto-redirect to /logout in 3 seconds.
 console.log(res.refresh); // => 3; URL=/logout
 ```
 
-#### `attachment` - Set/Get `Content-Disposition` with a filename.
+#### `attachment` - Sets/Gets `Content-Disposition` with a filename.
 
 ```javascript
 res.attachment = "example.txt";
 console.log(res.attchment); // => attachment; filename="example.txt"
 ```
 
-#### `cahce` - Set/Get `Cache-Control`.
+#### `cahce` - Sets/Gets `Cache-Control`.
 
 ```javascript
 res.cache = null; // no-cache
@@ -509,7 +509,7 @@ res.cache = "private";
 console.log(res.cache); // private
 ```
 
-#### `vary` - Set/Get `Vary`.
+#### `vary` - Sets/Gets `Vary`.
 
 ```javascript
 res.vary = "Content-Type";
@@ -517,7 +517,7 @@ res.vary = ["Content-Type", "Content-Length"]; // Set multiple fields.
 console.log(res.vary); // => [Content-Type, Content-Length]
 ```
 
-#### `keepAlive` - Set/Get `Connection`.
+#### `keepAlive` - Sets/Gets `Connection`.
 
 ```javascript
 res.keepAlive = true; // Connection: keep-alive
@@ -539,7 +539,7 @@ if (res.modified) {
 }
 ```
 
-#### `headers` - Set/Get response headers.
+#### `headers` - Sets/Gets response headers.
 
 This property is a `Proxy` instance, you can only manipulate its properties to 
 set headers.
@@ -552,7 +552,7 @@ console.log(res.headers); // => { "x-powered-by": "Node.js/8.9.3" }
 delete res.headers["x-powered-by"];
 ```
 
-#### `cookies` - Set/Get response cookies.
+#### `cookies` - Sets/Gets response cookies.
 
 This property is a Proxy instance, you can only manipulate its properties to 
 set cookies.
