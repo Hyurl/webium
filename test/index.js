@@ -1,4 +1,6 @@
-const { App } = require("../");
+"use strict";
+
+const App = require("../").App;
 const axios = require("axios").default;
 const assert = require("assert");
 const qs = require("qs");

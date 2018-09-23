@@ -1,9 +1,10 @@
 "use strict";
+var tslib_1 = require("tslib");
 require("source-map-support/register");
-const enhance = require("enhance-req-res");
-const pathToRegexp = require("path-to-regexp");
-const http_1 = require("http");
-const bodyParser = require("body-parser");
+var enhance = require("enhance-req-res");
+var pathToRegexp = require("path-to-regexp");
+var http_1 = require("http");
+var bodyParser = require("body-parser");
 var webium;
 (function (webium) {
     webium.Cookie = enhance.Cookie;
@@ -15,22 +16,23 @@ var webium;
         jsonp: false,
         caseSensitive: false
     };
-    class Router {
-        constructor(caseSensitive = false) {
+    var Router = (function () {
+        function Router(caseSensitive) {
+            if (caseSensitive === void 0) { caseSensitive = false; }
             this.middleware = [];
             this.paths = [];
             this.stacks = [];
             this.caseSensitive = caseSensitive;
         }
-        use(arg) {
+        Router.prototype.use = function (arg) {
             if (arg instanceof Router) {
-                let router = arg;
+                var router = arg;
                 Object.assign(this.middleware, router.middleware);
-                for (let i in router.paths) {
-                    let j = this.paths.indexOf(router.paths[i]);
+                for (var i in router.paths) {
+                    var j = this.paths.indexOf(router.paths[i]);
                     if (j >= 0) {
-                        let stack = router.stacks[i], _stack = this.stacks[j];
-                        for (let method in stack.handlers) {
+                        var stack = router.stacks[i], _stack = this.stacks[j];
+                        for (var method in stack.handlers) {
                             _stack.handlers[method] = Object.assign(_stack.handlers[method] || [], stack.handlers[method]);
                         }
                     }
@@ -49,20 +51,20 @@ var webium;
                     ".use() must be a function or an instance of Router.");
             }
             return this;
-        }
-        method(name, path, handler) {
+        };
+        Router.prototype.method = function (name, path, handler) {
             if (typeof handler !== "function")
                 throw new TypeError("The handler must be a function.");
-            let i = this.paths.indexOf(path);
+            var i = this.paths.indexOf(path);
             if (i === -1) {
                 i = this.paths.length;
-                let params = [];
+                var params = [];
                 this.paths.push(path);
                 this.stacks.push({
                     regexp: pathToRegexp(path, params, {
                         sensitive: this.caseSensitive
                     }),
-                    params,
+                    params: params,
                     handlers: {}
                 });
             }
@@ -71,129 +73,149 @@ var webium;
             }
             this.stacks[i].handlers[name].push(handler);
             return this;
-        }
-        delete(path, handler) {
+        };
+        Router.prototype.delete = function (path, handler) {
             return this.method("DELETE", path, handler);
-        }
-        get(path, handler) {
+        };
+        Router.prototype.get = function (path, handler) {
             return this.method("GET", path, handler);
-        }
-        head(path, handler) {
+        };
+        Router.prototype.head = function (path, handler) {
             return this.method("HEAD", path, handler);
-        }
-        patch(path, handler) {
+        };
+        Router.prototype.patch = function (path, handler) {
             return this.method("PATCH", path, handler);
-        }
-        post(path, handler) {
+        };
+        Router.prototype.post = function (path, handler) {
             return this.method("POST", path, handler);
-        }
-        put(path, handler) {
+        };
+        Router.prototype.put = function (path, handler) {
             return this.method("PUT", path, handler);
-        }
-        all(path, handler) {
-            for (let method of this.constructor.METHODS) {
+        };
+        Router.prototype.all = function (path, handler) {
+            for (var _i = 0, _a = this.constructor.METHODS; _i < _a.length; _i++) {
+                var method = _a[_i];
                 this.method(method, path, handler);
             }
             return this;
-        }
-        any(path, handler) {
+        };
+        Router.prototype.any = function (path, handler) {
             return this.all(path, handler);
-        }
-    }
-    Router.METHODS = [
-        "CONNECT",
-        "DELETE",
-        "HEAD",
-        "GET",
-        "HEAD",
-        "OPTIONS",
-        "PATCH",
-        "POST",
-        "PUT",
-        "TRACE"
-    ];
+        };
+        Router.METHODS = [
+            "CONNECT",
+            "DELETE",
+            "HEAD",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT",
+            "TRACE"
+        ];
+        return Router;
+    }());
     webium.Router = Router;
-    class App extends Router {
-        constructor(options) {
-            super();
-            this.options = Object.assign({}, webium.AppOptions, options);
-            this.caseSensitive = this.options.caseSensitive;
+    var App = (function (_super) {
+        tslib_1.__extends(App, _super);
+        function App(options) {
+            var _this = _super.call(this) || this;
+            _this.options = Object.assign({}, webium.AppOptions, options);
+            _this.caseSensitive = _this.options.caseSensitive;
             options = Object.assign({ extended: true }, options);
-            this.use(bodyParser.urlencoded(options))
+            _this.use(bodyParser.urlencoded(options))
                 .use(bodyParser.json(options));
+            return _this;
         }
-        get handler() {
-            let enhances = enhance(this.options);
-            return (_req, _res) => {
-                let enhanced = enhances(_req, _res), req = enhanced.req, res = enhanced.res, hasStack = false, hasHandler = false;
-                req.app = this;
-                res.app = this;
-                let i = -1;
-                let wrap = () => {
-                    i += 1;
-                    if (i == this.stacks.length) {
-                        if (!hasStack) {
-                            res.status = 404;
-                            this.onerror(res.status, req, res);
+        Object.defineProperty(App.prototype, "handler", {
+            get: function () {
+                var _this = this;
+                var enhances = enhance(this.options);
+                return function (_req, _res) {
+                    var enhanced = enhances(_req, _res), req = enhanced.req, res = enhanced.res, hasStack = false, hasHandler = false;
+                    req.app = _this;
+                    res.app = _this;
+                    var i = -1;
+                    var wrap = function () {
+                        i += 1;
+                        if (i == _this.stacks.length) {
+                            if (!hasStack) {
+                                res.status = 404;
+                                _this.onerror(res.status, req, res);
+                            }
+                            else if (!hasHandler) {
+                                res.status = 405;
+                                _this.onerror(res.status, req, res);
+                            }
+                            return void 0;
                         }
-                        else if (!hasHandler) {
-                            res.status = 405;
-                            this.onerror(res.status, req, res);
+                        else if (i > _this.stacks.length) {
+                            return void 0;
                         }
-                        return void 0;
-                    }
-                    else if (i > this.stacks.length) {
-                        return void 0;
-                    }
-                    let stack = this.stacks[i], values = stack.regexp.exec(req.pathname);
-                    if (!values)
-                        return wrap();
-                    hasStack = true;
-                    let handlers = stack.handlers[req.method];
-                    if (!handlers || handlers.length === 0)
-                        return wrap();
-                    hasHandler = true;
-                    req.params = {};
-                    if (stack.params.length > 0) {
-                        values.shift();
-                        for (let key of stack.params) {
-                            req.params[key.name] = values.shift();
+                        var stack = _this.stacks[i], values = stack.regexp.exec(req.pathname);
+                        if (!values)
+                            return wrap();
+                        hasStack = true;
+                        var handlers = stack.handlers[req.method];
+                        if (!handlers || handlers.length === 0)
+                            return wrap();
+                        hasHandler = true;
+                        req.params = {};
+                        if (stack.params.length > 0) {
+                            values.shift();
+                            for (var _i = 0, _a = stack.params; _i < _a.length; _i++) {
+                                var key = _a[_i];
+                                req.params[key.name] = values.shift();
+                            }
                         }
-                    }
-                    return this.callNext(req, res, handlers, wrap);
+                        return _this.callNext(req, res, handlers, wrap);
+                    };
+                    _this.callNext(req, res, _this.middleware, wrap);
                 };
-                this.callNext(req, res, this.middleware, wrap);
-            };
-        }
-        get listener() {
-            return this.handler;
-        }
-        callNext(req, res, handlers, cb) {
-            let i = -1;
-            let next = (thisObj) => {
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(App.prototype, "listener", {
+            get: function () {
+                return this.handler;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        App.prototype.callNext = function (req, res, handlers, cb) {
+            var _this = this;
+            var i = -1;
+            var next = function (thisObj) {
                 i += 1;
                 if (i === handlers.length)
                     return cb();
                 else if (i > handlers.length)
                     return void 0;
                 try {
-                    return handlers[i].call(thisObj || this, req, res, next);
+                    return handlers[i].call(thisObj || _this, req, res, next);
                 }
                 catch (e) {
-                    this.onerror(e, req, res);
+                    _this.onerror(e, req, res);
                 }
             };
             return next();
-        }
-        listen(...args) {
-            this.server = http_1.createServer(this.handler).listen(...args);
+        };
+        App.prototype.listen = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var _a;
+            this.server = (_a = http_1.createServer(this.handler)).listen.apply(_a, args);
             return this;
-        }
-        close() {
+        };
+        App.prototype.close = function () {
             this.server.close();
             return this;
-        }
-        onerror(err, req, res) {
+        };
+        App.prototype.onerror = function (err, req, res) {
             if (res.statusCode === 404 || res.statusCode === 405) {
                 res.end(err);
             }
@@ -205,8 +227,9 @@ var webium;
                     err = res.status;
                 res.end(err);
             }
-        }
-    }
+        };
+        return App;
+    }(Router));
     webium.App = App;
 })(webium || (webium = {}));
 module.exports = webium;

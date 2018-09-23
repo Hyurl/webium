@@ -1,5 +1,7 @@
+"use strict";
+
 const assert = require("assert");
-const { Router } = require("../");
+const Router = require("../").Router;
 
 var router = new Router();
 
