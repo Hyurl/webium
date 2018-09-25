@@ -17,6 +17,7 @@ require("./test-head")(app);
 require("./test-patch")(app);
 require("./test-posts")(app);
 require("./test-put")(app);
+require("./test-unique")(app);
 
 app.use(require("./test-router"));
 
@@ -175,6 +176,10 @@ function listeningListener(outerServer) {
                 }
             })).then(res => {
                 assert.equal(res.data, "OK");
+            });
+        }).then(() => {
+            return axios.get("/unique").then(res => {
+                assert.equal(res.data, "<h1>Hello, World!</h1>");
             });
         }).then(() => {
             app.close();

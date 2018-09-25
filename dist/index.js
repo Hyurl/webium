@@ -27,13 +27,14 @@ var webium;
         Router.prototype.use = function (arg) {
             if (arg instanceof Router) {
                 var router = arg;
-                Object.assign(this.middleware, router.middleware);
+                this.middleware = this.middleware.concat(router.middleware);
                 for (var i in router.paths) {
                     var j = this.paths.indexOf(router.paths[i]);
                     if (j >= 0) {
                         var stack = router.stacks[i], _stack = this.stacks[j];
                         for (var method in stack.handlers) {
-                            _stack.handlers[method] = Object.assign(_stack.handlers[method] || [], stack.handlers[method]);
+                            _stack.handlers[method] = (_stack.handlers[method]
+                                || []).concat(stack.handlers[method]);
                         }
                     }
                     else {
@@ -52,7 +53,7 @@ var webium;
             }
             return this;
         };
-        Router.prototype.method = function (name, path, handler) {
+        Router.prototype.method = function (name, path, handler, unique) {
             if (typeof handler !== "function")
                 throw new TypeError("The handler must be a function.");
             var i = this.paths.indexOf(path);
@@ -71,36 +72,41 @@ var webium;
             if (this.stacks[i].handlers[name] === undefined) {
                 this.stacks[i].handlers[name] = [];
             }
-            this.stacks[i].handlers[name].push(handler);
-            return this;
-        };
-        Router.prototype.delete = function (path, handler) {
-            return this.method("DELETE", path, handler);
-        };
-        Router.prototype.get = function (path, handler) {
-            return this.method("GET", path, handler);
-        };
-        Router.prototype.head = function (path, handler) {
-            return this.method("HEAD", path, handler);
-        };
-        Router.prototype.patch = function (path, handler) {
-            return this.method("PATCH", path, handler);
-        };
-        Router.prototype.post = function (path, handler) {
-            return this.method("POST", path, handler);
-        };
-        Router.prototype.put = function (path, handler) {
-            return this.method("PUT", path, handler);
-        };
-        Router.prototype.all = function (path, handler) {
-            for (var _i = 0, _a = this.constructor.METHODS; _i < _a.length; _i++) {
-                var method = _a[_i];
-                this.method(method, path, handler);
+            if (unique) {
+                this.stacks[i].handlers[name] = [handler];
+            }
+            else {
+                this.stacks[i].handlers[name].push(handler);
             }
             return this;
         };
-        Router.prototype.any = function (path, handler) {
-            return this.all(path, handler);
+        Router.prototype.delete = function (path, handler, unique) {
+            return this.method("DELETE", path, handler, unique);
+        };
+        Router.prototype.get = function (path, handler, unique) {
+            return this.method("GET", path, handler, unique);
+        };
+        Router.prototype.head = function (path, handler, unique) {
+            return this.method("HEAD", path, handler, unique);
+        };
+        Router.prototype.patch = function (path, handler, unique) {
+            return this.method("PATCH", path, handler, unique);
+        };
+        Router.prototype.post = function (path, handler, unique) {
+            return this.method("POST", path, handler, unique);
+        };
+        Router.prototype.put = function (path, handler, unique) {
+            return this.method("PUT", path, handler, unique);
+        };
+        Router.prototype.all = function (path, handler, unique) {
+            for (var _i = 0, _a = this.constructor.METHODS; _i < _a.length; _i++) {
+                var method = _a[_i];
+                this.method(method, path, handler, unique);
+            }
+            return this;
+        };
+        Router.prototype.any = function (path, handler, unique) {
+            return this.all(path, handler, unique);
         };
         Router.METHODS = [
             "CONNECT",

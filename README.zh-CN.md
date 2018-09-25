@@ -13,6 +13,8 @@
 
 自 0.3.5 版本起，这个包能够兼容使用 Node.js 内置的 **HTTP2** 服务器。
 
+自 0.4.2 版本起，这个包支持实现 [热重载](./hot-reloading.md)。
+
 ## 安装
 
 ```sh
@@ -174,31 +176,33 @@ router.method("GET", "/", (req, res, next) => {
 [path-to-regexp](https://github.com/pillarjs/path-to-regexp) 模块来进行解析，你
 可以通过它的文档来了解更多细节。
 
-#### `delete(path: string, handler: RouteHandler): this`
+如果提供了参数 `unique`，这意味着路由应该只包含一个处理器函数，并且新的函数将会替换旧的。
 
-简写 `router.method("DELETE", path, handler)`。
+#### `delete(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `get(path: string, handler: RouteHandler): this`
+简写 `router.method("DELETE", path, handler, unique)`.
 
-简写 `router.method("GET", path, handler)`。
+#### `get(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `head(path: string, handler: RouteHandler): this`
+简写 `router.method("GET", path, handler, unique)`.
 
-简写 `router.method("HEAD", path, handler)`。
+#### `head(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `patch(path: string, handler: RouteHandler): this`
+简写 `router.method("HEAD", path, handler, unique)`.
 
-简写 `router.method("PATCH", path, handler)`。
+#### `patch(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `post(path: string, handler: RouteHandler): this`
+简写 `router.method("PATCH", path, handler, unique)`.
 
-简写 `router.method("POST", path, handler)`。
+#### `post(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `put(path: string, handler: RouteHandler): this`
+简写 `router.method("POST", path, handler, unique)`.
 
-简写 `router.method("PUT", path, handler)`。
+#### `put(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `all(path: string, handler: RouteHandler): this`
+简写 `router.method("PUT", path, handler, unique)`.
+
+#### `all(path: string, handler: RouteHandler, unique?: boolean): this`
 
 添加一个处理器函数到所有（HTTP 请求）方法中。
 

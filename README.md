@@ -16,6 +16,9 @@ middleware, so you can use them instead.
 Since version 0.3.5, this package is compatible to Node.js internal **HTTP2** 
 server.
 
+Since version 0.4.2, this package supports implementing 
+[hot-reloading](./hot-reloading.md).
+
 ## Install
 
 ```sh
@@ -161,7 +164,7 @@ modified the routes of that router, the current one will also be affected.
 Middleware are called before all routes, and when concatenating two routes, 
 middleware are always merged.
 
-#### `method(name: string, path: string, handler: RouteHandler): this`
+#### `method(name: string, path: string, handler: RouteHandler, unique?: boolean): this`
 
 Adds a handler function to a specified method and path.
 
@@ -180,31 +183,34 @@ The `path` in `express` style, will be parsed by
 [path-to-regexp](https://github.com/pillarjs/path-to-regexp) module, you can 
 learn more details in its documentation.
 
-#### `delete(path: string, handler: RouteHandler): this`
+If the argument `unique` is provided, that means the route should contain only 
+one handler, and the new one will replace the old one.
 
-Short-hand for `router.method("DELETE", path, handler)`.
+#### `delete(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `get(path: string, handler: RouteHandler): this`
+Short-hand for `router.method("DELETE", path, handler, unique)`.
 
-Short-hand for `router.method("GET", path, handler)`.
+#### `get(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `head(path: string, handler: RouteHandler): this`
+Short-hand for `router.method("GET", path, handler, unique)`.
 
-Short-hand for `router.method("HEAD", path, handler)`.
+#### `head(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `patch(path: string, handler: RouteHandler): this`
+Short-hand for `router.method("HEAD", path, handler, unique)`.
 
-Short-hand for `router.method("PATCH", path, handler)`.
+#### `patch(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `post(path: string, handler: RouteHandler): this`
+Short-hand for `router.method("PATCH", path, handler, unique)`.
 
-Short-hand for `router.method("POST", path, handler)`.
+#### `post(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `put(path: string, handler: RouteHandler): this`
+Short-hand for `router.method("POST", path, handler, unique)`.
 
-Short-hand for `router.method("PUT", path, handler)`.
+#### `put(path: string, handler: RouteHandler, unique?: boolean): this`
 
-#### `all(path: string, handler: RouteHandler): this`
+Short-hand for `router.method("PUT", path, handler, unique)`.
+
+#### `all(path: string, handler: RouteHandler, unique?: boolean): this`
 
 Adds a handler function to the all methods.
 

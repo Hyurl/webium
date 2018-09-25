@@ -84,7 +84,7 @@ namespace webium {
                 let router = arg;
 
                 // Attach middleware
-                Object.assign(this.middleware, router.middleware);
+                this.middleware = this.middleware.concat(router.middleware);
 
                 // Attach routes
                 for (let i in router.paths) {
@@ -92,11 +92,10 @@ namespace webium {
                     if (j >= 0) {
                         let stack = router.stacks[i],
                             _stack = this.stacks[j];
+
                         for (let method in stack.handlers) {
-                            _stack.handlers[method] = Object.assign(
-                                _stack.handlers[method] || [],
-                                stack.handlers[method]
-                            );
+                            _stack.handlers[method] = (_stack.handlers[method]
+                                || []).concat(stack.handlers[method]);
                         }
                     } else {
                         this.paths.push(router.paths[i]);
@@ -117,8 +116,10 @@ namespace webium {
          * Adds a handler function to a specified method and path.
          * @param name GET, POST, HEAD, etc.
          * @param path The URL path.
+         * @param unique The route should contain only one handler, and the new 
+         *  one will replace the old one.
          */
-        method(name: string, path: string, handler: RouteHandler): this {
+        method(name: string, path: string, handler: RouteHandler, unique?: boolean): this {
             if (typeof handler !== "function")
                 throw new TypeError("The handler must be a function.");
 
@@ -135,55 +136,61 @@ namespace webium {
                     handlers: {}
                 });
             }
+
             if (this.stacks[i].handlers[name] === undefined) {
                 this.stacks[i].handlers[name] = [];
             }
-            this.stacks[i].handlers[name].push(handler);
+
+            if (unique) {
+                this.stacks[i].handlers[name] = [handler];
+            } else {
+                this.stacks[i].handlers[name].push(handler);
+            }
 
             return this;
         }
 
         /** Adds a handler function to the `DELETE` method. */
-        delete(path: string, handler: RouteHandler): this {
-            return this.method("DELETE", path, handler);
+        delete(path: string, handler: RouteHandler, unique?: boolean): this {
+            return this.method("DELETE", path, handler, unique);
         }
 
         /** Adds a handler function to the `GET` method. */
-        get(path: string, handler: RouteHandler): this {
-            return this.method("GET", path, handler);
+        get(path: string, handler: RouteHandler, unique?: boolean): this {
+            return this.method("GET", path, handler, unique);
         }
 
         /** Adds a handler function to the `HEAD` method. */
-        head(path: string, handler: RouteHandler): this {
-            return this.method("HEAD", path, handler);
+        head(path: string, handler: RouteHandler, unique?: boolean): this {
+            return this.method("HEAD", path, handler, unique);
         }
 
         /** Adds a handler function to the `PATCH` method. */
-        patch(path: string, handler: RouteHandler): this {
-            return this.method("PATCH", path, handler);
+        patch(path: string, handler: RouteHandler, unique?: boolean): this {
+            return this.method("PATCH", path, handler, unique);
         }
 
         /** Adds a handler function to the `POST` method. */
-        post(path: string, handler: RouteHandler): this {
-            return this.method("POST", path, handler);
+        post(path: string, handler: RouteHandler, unique?: boolean): this {
+            return this.method("POST", path, handler, unique);
         }
 
         /** Adds a handler function to the `PUT` method. */
-        put(path: string, handler: RouteHandler): this {
-            return this.method("PUT", path, handler);
+        put(path: string, handler: RouteHandler, unique?: boolean): this {
+            return this.method("PUT", path, handler, unique);
         }
 
         /** Adds a handler function to the all methods. */
-        all(path: string, handler: RouteHandler): this {
+        all(path: string, handler: RouteHandler, unique?: boolean): this {
             for (let method of (<typeof Router>this.constructor).METHODS) {
-                this.method(method, path, handler);
+                this.method(method, path, handler, unique);
             }
             return this;
         }
 
         /** An alias of `router.all()`. */
-        any(path: string, handler: RouteHandler): this {
-            return this.all(path, handler);
+        any(path: string, handler: RouteHandler, unique?: boolean): this {
+            return this.all(path, handler, unique);
         }
     }
 
