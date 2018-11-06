@@ -207,7 +207,7 @@ var webium;
                     }
                     else {
                         var result = handlers[i].call(thisObj || _this, req, res);
-                        if (typeof result["then"] == "function") {
+                        if (typeof result == "object" && typeof result["then"] == "function") {
                             return result["then"](function (_res) {
                                 if (_res !== undefined) {
                                     if (sendImmediate) {

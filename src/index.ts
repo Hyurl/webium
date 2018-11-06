@@ -296,7 +296,7 @@ namespace webium {
                     } else { // without 'next'
                         let result = handlers[i].call(thisObj || this, req, res);
 
-                        if (typeof result["then"] == "function") { // promise
+                        if (typeof result == "object" && typeof result["then"] == "function") { // promise
                             return result["then"](_res => {
                                 if (_res !== undefined) {
                                     if (sendImmediate) {

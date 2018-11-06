@@ -7,6 +7,7 @@ const qs = require("qs");
 const http = require("http");
 
 var app = new App();
+var nodeVersion = parseFloat(process.version.slice(1));
 
 require("./test-middleware")(app);
 
@@ -18,9 +19,12 @@ require("./test-patch")(app);
 require("./test-posts")(app);
 require("./test-put")(app);
 require("./test-unique")(app);
-require("./test-async")(app);
-require("./test-no-next")(app);
 require("./test-regexp")(app);
+require("./test-no-next")(app);
+
+if (nodeVersion >= 7.6) {
+    require("./test-async")(app);
+}
 
 app.use(require("./test-router"));
 
@@ -187,6 +191,7 @@ function listeningListener(outerServer) {
                 assert.equal(res.data, "<h1>Hello, World!</h1>");
             });
         }).then(() => {
+            if (nodeVersion < 7.6) return;
             return axios.get("/async").then(res => {
                 assert.equal(res.data, "Hello, Webium!");
             });
