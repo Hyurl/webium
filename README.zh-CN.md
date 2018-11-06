@@ -1,6 +1,6 @@
 # Webium
 
-**一个小巧的 Web 框架，使用路由和中间件。** [English](./README.md)
+**一个小巧的微服务 Web 框架，使用路由和中间件。** [English](./README.md)
 
 这个模块添加额外的属性和方法到 HTTP 服务器程序中相应的 `req` 和 `res` 对象上，来增强
 程序的功能。用以增强的程序已经被分离为一个独立的模块
@@ -8,12 +8,15 @@
 框架或者内置的 Node.js HTTP/HTTPS/HTTP2 服务器上，你可以查阅它的文档，如果你想更好
 地了解它。
 
-这个模块同时拥有 `express` 和 `koa` 的风格，但仅保留了非常少而经常使用的方法。它兼容
-大部分知名的 `connect` 和 `express` 中间件，因此你可以直接使用它们。
+这个模块同时拥有 **express** 和 **koa** 的风格，但仅保留了非常少而经常使用的方法。它
+兼容大部分知名的 **connect** 和 express 中间件，因此你可以直接使用它们。
 
-自 0.3.5 版本起，这个包能够兼容使用 Node.js 内置的 **HTTP2** 服务器。
+自 0.3.5 版本起，Webium 能够兼容使用 Node.js 内置的 **HTTP2** 服务器。
 
-自 0.4.2 版本起，这个包支持实现 [热重载](./hot-reloading.md)。
+自 0.4.2 版本起，Webium 支持实现 [热重载](./hot-reloading.md)。
+
+自 0.5.0 版本起，Webium 支持 **Flask**（一个 Python 的 web 框架）风格的路由绑定方式。
+这意味着调用 `next()` 将是不必要的，并且可以直接从处理器函数中返回值给客户端。
 
 ## 安装
 
@@ -28,6 +31,10 @@ const { App, Router } = require("./");
 
 var app = new App();
 
+// Webium 支持动态加载路由，你可以先启动监听再绑定路由。
+app.listen(80);
+
+// 典型的 Express 风格
 app.get("/", (req, res) => {
     res.send("<h1>Welcome to your first webium app!</h1>");
 }).get("/user/:id", (req, res) => {
@@ -42,9 +49,8 @@ app.get("/", (req, res) => {
     res.send(req.body);
 });
 
-// This route contains many features: using async/await, calling next() before
-// doing stuffs, returning value from the handler function and catching 
-// errors across the request life cycle.
+// Koa 风格：这个路由处理器函数包含了很多特性：使用 async/await，在真正执行操作前调用
+// next() 函数，从处理器函数中返回值，以及对请求的整个生命周期捕获错误。
 app.get("/async", async (req, res, next) => {
     try {
         var result = await next();
@@ -56,6 +62,19 @@ app.get("/async", async (req, res, next) => {
     return "Hello, Webium!";
 });
 
+// Flask (Python) 风格：没有 next()，如果函数返回值，它将会被自动发送到响应流；如果
+// 没有返回值，那么下一个处理器函数将会被自动调用，直到最后一个函数也被调用。这个特性
+// 对普通函数、async 函数（或者任何返回 promise 的函数）都有效。
+app.get("/send-returning", async () => {
+    return "Hello, Webium!"; // the returning value will be sent automatically
+});
+app.get("/no-next", async (req) => {
+    req.myVar = "Hello, Webium";
+}).get("/no-next", (req) => {
+    return req.myVar;
+});
+
+// 与另一个独立的路由实例相结合
 var router = new Router();
 
 router.get("/another-router", (req, res)=>{
@@ -64,12 +83,15 @@ router.get("/another-router", (req, res)=>{
 
 app.use(router);
 
-// This route will match any URL.
-app.get("(.*)", (req, res) => {
-    res.send("Unknown route.");
+// 直接绑定正则表达式
+app.get(/\S+\.html$/, () => {
+    return "request an HTML file.";
 });
 
-app.listen(80);
+// 这个路由将匹配任何 URL
+app.get("*", () => {
+    return "Unknown route.";
+});
 ```
 
 ## API

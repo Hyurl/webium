@@ -62,7 +62,7 @@ namespace webium {
         ];
 
         protected middleware: RouteHandler[] = [];
-        protected paths: string[] = [];
+        protected paths: (string | RegExp)[] = [];
         protected stacks: RouteStack[] = [];
 
         protected caseSensitive: boolean;
@@ -119,19 +119,22 @@ namespace webium {
          * @param unique The route should contain only one handler, and the new 
          *  one will replace the old one.
          */
-        method(name: string, path: string, handler: RouteHandler, unique?: boolean): this {
+        method(name: string, path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             if (typeof handler !== "function")
                 throw new TypeError("The handler must be a function.");
 
             let i = this.paths.indexOf(path);
             if (i === -1) {
                 i = this.paths.length;
-                let params = [];
+                let params = [],
+                    regexp = path instanceof RegExp ? path
+                        : pathToRegexp(path == "*" ? "(.*)" : path, params, {
+                            sensitive: this.caseSensitive
+                        });
+
                 this.paths.push(path);
                 this.stacks.push({
-                    regexp: pathToRegexp(path, params, {
-                        sensitive: this.caseSensitive
-                    }),
+                    regexp,
                     params,
                     handlers: {}
                 });
@@ -151,37 +154,37 @@ namespace webium {
         }
 
         /** Adds a handler function to the `DELETE` method. */
-        delete(path: string, handler: RouteHandler, unique?: boolean): this {
+        delete(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             return this.method("DELETE", path, handler, unique);
         }
 
         /** Adds a handler function to the `GET` method. */
-        get(path: string, handler: RouteHandler, unique?: boolean): this {
+        get(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             return this.method("GET", path, handler, unique);
         }
 
         /** Adds a handler function to the `HEAD` method. */
-        head(path: string, handler: RouteHandler, unique?: boolean): this {
+        head(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             return this.method("HEAD", path, handler, unique);
         }
 
         /** Adds a handler function to the `PATCH` method. */
-        patch(path: string, handler: RouteHandler, unique?: boolean): this {
+        patch(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             return this.method("PATCH", path, handler, unique);
         }
 
         /** Adds a handler function to the `POST` method. */
-        post(path: string, handler: RouteHandler, unique?: boolean): this {
+        post(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             return this.method("POST", path, handler, unique);
         }
 
         /** Adds a handler function to the `PUT` method. */
-        put(path: string, handler: RouteHandler, unique?: boolean): this {
+        put(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             return this.method("PUT", path, handler, unique);
         }
 
         /** Adds a handler function to the all methods. */
-        all(path: string, handler: RouteHandler, unique?: boolean): this {
+        all(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             for (let method of (<typeof Router>this.constructor).METHODS) {
                 this.method(method, path, handler, unique);
             }
@@ -189,7 +192,7 @@ namespace webium {
         }
 
         /** An alias of `router.all()`. */
-        any(path: string, handler: RouteHandler, unique?: boolean): this {
+        any(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             return this.all(path, handler, unique);
         }
     }
@@ -279,7 +282,7 @@ namespace webium {
 
         private callNext(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
             let i = -1;
-            let next = (thisObj?: any) => {
+            let next = (thisObj?: any, sendImmediate = false) => {
                 i += 1;
 
                 if (i === handlers.length)
@@ -288,13 +291,43 @@ namespace webium {
                     return void 0;
 
                 try {
-                    return handlers[i].call(thisObj || this, req, res, next);
+                    if (handlers[i].length >= 3) { // with 'next'
+                        return handlers[i].call(thisObj || this, req, res, next);
+                    } else { // without 'next'
+                        let result = handlers[i].call(thisObj || this, req, res);
+
+                        if (typeof result["then"] == "function") { // promise
+                            return result["then"](_res => {
+                                if (_res !== undefined) {
+                                    if (sendImmediate) {
+                                        res.headersSent
+                                            ? (!res.finished && res.write(_res))
+                                            : res.send(_res);
+                                    } else {
+                                        return _res;
+                                    }
+                                } else {
+                                    return next(thisObj, sendImmediate);
+                                }
+                            });
+                        } else if (result !== undefined) {
+                            if (sendImmediate) {
+                                res.headersSent
+                                    ? (!res.finished && res.write(result))
+                                    : res.send(result);
+                            } else {
+                                return result;
+                            }
+                        } else {
+                            return next(thisObj, sendImmediate);
+                        }
+                    }
                 } catch (e) {
                     this.onerror(e, req, res);
                 }
             };
 
-            return next();
+            return next(void 0, true);
         }
 
         /** Same as `http.listen()`. */
@@ -302,8 +335,8 @@ namespace webium {
         listen(port?: number, hostname?: string, listeningListener?: Function): this;
         listen(port?: number, backlog?: number, listeningListener?: Function): this;
         listen(port?: number, listeningListener?: Function): this;
-        listen(path: string, backlog?: number, listeningListener?: Function): this;
-        listen(path: string, listeningListener?: Function): this;
+        listen(path: string | RegExp, backlog?: number, listeningListener?: Function): this;
+        listen(path: string | RegExp, listeningListener?: Function): this;
         listen(options: net.ListenOptions, listeningListener?: Function): this;
         listen(handle: any, backlog?: number, listeningListener?: Function): this;
         listen(handle: any, listeningListener?: Function): this;

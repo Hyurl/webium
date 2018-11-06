@@ -1,6 +1,7 @@
 # Webium
 
-**A minimal web framework with middleware and routes.** [中文](./README.zh-CN.md)
+**A minimal web framework for microservice with middleware and routes.**
+[中文](./README.zh-CN.md)
 
 This module adds additional properties and methods to the corresponding `req` 
 and `res` objects in a http server, and enhance abilities of the program.
@@ -9,15 +10,18 @@ The program for enhancement has been separated as an individual module
 with other frameworks or the internal Node.js http/https/http2 server, you can
 check it out if you want.
 
-This module has both `express` style and `koa` style, but only keeps very few 
-and useful methods. It is compatible to most well-known `connect` and `express` 
-middleware, so you can use them instead.
+This module has both **express** style and **koa** style, but only keeps very 
+few and useful methods. It is compatible to most well-known **connect** and 
+express middleware, so you can use them instead.
 
-Since version 0.3.5, this package is compatible to Node.js internal **HTTP2** 
-server.
+Since version 0.3.5, Webium is compatible to Node.js internal **HTTP2** server.
 
-Since version 0.4.2, this package supports implementing 
+Since version 0.4.2, Webium supports implementing 
 [hot-reloading](./hot-reloading.md).
+
+Since version 0.5.0, Webium supports **Flask** (a Python framework) style of 
+binding routes, that means no `next()` needed, and directly returning values 
+from the handler function to the client is allowed.
 
 ## Install
 
@@ -32,6 +36,11 @@ const { App, Router } = require("./");
 
 var app = new App();
 
+// Webium supports dynamic routing, you can start listening before binding 
+// routes.
+app.listen(80);
+
+// Typical Express style
 app.get("/", (req, res) => {
     res.send("<h1>Welcome to your first webium app!</h1>");
 }).get("/user/:id", (req, res) => {
@@ -46,9 +55,9 @@ app.get("/", (req, res) => {
     res.send(req.body);
 });
 
-// This route contains many features: using async/await, calling next() before
-// doing stuffs, returning value from the handler function and catching 
-// errors across the request life cycle.
+// Koa style: The route handler contains many features: using async/await, 
+// calling next() before doing stuffs, returning value from a handler function 
+// and catching errors across the request life cycle.
 app.get("/async", async (req, res, next) => {
     try {
         var result = await next();
@@ -60,6 +69,20 @@ app.get("/async", async (req, res, next) => {
     return "Hello, Webium!";
 });
 
+// Flask (Python) style: without next(). If the function returns something, it 
+// will be sent automatically. If nothing returned, the next function will be 
+// automatically invoked until the last one is called. This rule applys to both 
+// ordinary function and async functions (or any function returns promise).
+app.get("/send-returning", async () => {
+    return "Hello, Webium!"; // the returning value will be sent automatically
+});
+app.get("/no-next", async (req) => {
+    req.myVar = "Hello, Webium";
+}).get("/no-next", (req) => {
+    return req.myVar;
+});
+
+// Combine rules with an individual router.
 var router = new Router();
 
 router.get("/another-router", (req, res)=>{
@@ -68,12 +91,15 @@ router.get("/another-router", (req, res)=>{
 
 app.use(router);
 
-// This route will match any URL.
-app.get("(.*)", (req, res) => {
-    res.send("Unknown route.");
+// Bind regular expression directly
+app.get(/\S+\.html$/, () => {
+    return "request an HTML file.";
 });
 
-app.listen(80);
+// This route will match any URL
+app.get("*", () => {
+    return "Unknown route.";
+});
 ```
 
 ## API

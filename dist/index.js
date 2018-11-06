@@ -59,12 +59,13 @@ var webium;
             var i = this.paths.indexOf(path);
             if (i === -1) {
                 i = this.paths.length;
-                var params = [];
+                var params = [], regexp = path instanceof RegExp ? path
+                    : pathToRegexp(path == "*" ? "(.*)" : path, params, {
+                        sensitive: this.caseSensitive
+                    });
                 this.paths.push(path);
                 this.stacks.push({
-                    regexp: pathToRegexp(path, params, {
-                        sensitive: this.caseSensitive
-                    }),
+                    regexp: regexp,
                     params: params,
                     handlers: {}
                 });
@@ -193,20 +194,56 @@ var webium;
         App.prototype.callNext = function (req, res, handlers, cb) {
             var _this = this;
             var i = -1;
-            var next = function (thisObj) {
+            var next = function (thisObj, sendImmediate) {
+                if (sendImmediate === void 0) { sendImmediate = false; }
                 i += 1;
                 if (i === handlers.length)
                     return cb();
                 else if (i > handlers.length)
                     return void 0;
                 try {
-                    return handlers[i].call(thisObj || _this, req, res, next);
+                    if (handlers[i].length >= 3) {
+                        return handlers[i].call(thisObj || _this, req, res, next);
+                    }
+                    else {
+                        var result = handlers[i].call(thisObj || _this, req, res);
+                        if (typeof result["then"] == "function") {
+                            return result["then"](function (_res) {
+                                if (_res !== undefined) {
+                                    if (sendImmediate) {
+                                        res.headersSent
+                                            ? (!res.finished && res.write(_res))
+                                            : res.send(_res);
+                                    }
+                                    else {
+                                        return _res;
+                                    }
+                                }
+                                else {
+                                    return next(thisObj, sendImmediate);
+                                }
+                            });
+                        }
+                        else if (result !== undefined) {
+                            if (sendImmediate) {
+                                res.headersSent
+                                    ? (!res.finished && res.write(result))
+                                    : res.send(result);
+                            }
+                            else {
+                                return result;
+                            }
+                        }
+                        else {
+                            return next(thisObj, sendImmediate);
+                        }
+                    }
                 }
                 catch (e) {
                     _this.onerror(e, req, res);
                 }
             };
-            return next();
+            return next(void 0, true);
         };
         App.prototype.listen = function () {
             var args = [];

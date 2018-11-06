@@ -6,7 +6,7 @@ const Router = require("../").Router;
 var router = new Router();
 
 router.get("/router/", (req, res) => {
-    res.send("<p>This response if from a router.</p>");
+    res.send("<p>This response is from a router.</p>");
 }).patch("/router/user-via-urlencoded", (req, res) => {
     assert.deepEqual(req.body, {
         name: "Luna",

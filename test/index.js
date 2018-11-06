@@ -18,8 +18,13 @@ require("./test-patch")(app);
 require("./test-posts")(app);
 require("./test-put")(app);
 require("./test-unique")(app);
+require("./test-async")(app);
+require("./test-no-next")(app);
+require("./test-regexp")(app);
 
 app.use(require("./test-router"));
+
+require("./test-match-any")(app);
 
 app.listen(3000, listeningListener(true));
 
@@ -149,7 +154,7 @@ function listeningListener(outerServer) {
             });
         }).then(() => {
             return axios.get("/router/").then(res => {
-                assert.equal(res.data, "<p>This response if from a router.</p>");
+                assert.equal(res.data, "<p>This response is from a router.</p>");
             });
         }).then(() => {
             return axios.patch("/router/user-via-urlencoded", qs.stringify({
@@ -180,6 +185,26 @@ function listeningListener(outerServer) {
         }).then(() => {
             return axios.get("/unique").then(res => {
                 assert.equal(res.data, "<h1>Hello, World!</h1>");
+            });
+        }).then(() => {
+            return axios.get("/async").then(res => {
+                assert.equal(res.data, "Hello, Webium!");
+            });
+        }).then(() => {
+            return axios.get("/send-returning").then(res => {
+                assert.equal(res.data, "Hello, Webium!");
+            });
+        }).then(() => {
+            return axios.get("/no-next").then(res => {
+                assert.equal(res.data, "Hello, Webium!");
+            });
+        }).then(() => {
+            return axios.get("/test.html").then(res => {
+                assert.equal(res.data, "request an HTML file.");
+            });
+        }).then(() => {
+            return axios.get("/match-any").then(res => {
+                assert.equal(res.data, "Unknown route.");
             });
         }).then(() => {
             app.close();
