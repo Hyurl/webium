@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import * as enhance from "enhance-req-res";
 import * as pathToRegexp from "path-to-regexp";
 import { createServer, IncomingMessage, ServerResponse } from "http";

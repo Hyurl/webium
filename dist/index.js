@@ -1,6 +1,5 @@
 "use strict";
 var tslib_1 = require("tslib");
-require("source-map-support/register");
 var enhance = require("enhance-req-res");
 var pathToRegexp = require("path-to-regexp");
 var http_1 = require("http");
