@@ -6,6 +6,11 @@ import * as bodyParser from "body-parser";
 
 namespace webium {
     export const Cookie = enhance.Cookie;
+    export const URL = enhance.URL;
+    export const RequestConstructor: new (...args: any[]) => Request = <any>enhance.Request;
+    export const Http2RequestConstructor: new (...args: any[]) => Request = <any>enhance.Http2Request;
+    export const ResponseConstructor: new (...args: any[]) => Response = <any>enhance.Response;
+    export const Http2ResponseConstructor: new (...args: any[]) => Response = <any>enhance.Http2Response;
 
     export interface Request extends enhance.Request {
         app: App;
@@ -127,7 +132,7 @@ namespace webium {
                 i = this.paths.length;
                 let params = [],
                     regexp = path instanceof RegExp ? path
-                        : pathToRegexp(path == "*" ? "(.*)" : path, params, {
+                        : pathToRegexp(path === "*" ? "(.*)" : path, params, {
                             sensitive: this.caseSensitive
                         });
 
@@ -224,10 +229,9 @@ namespace webium {
                 req.app = this;
                 res.app = this;
 
-                let i = -1;
+                let i = 0;
                 let wrap = () => {
-                    i += 1;
-                    if (i == this.stacks.length) {
+                    if (i === this.stacks.length) {
                         // All routes has been tested, and none is matched, 
                         // send 404/405 response.
                         if (!hasStack) {
@@ -242,7 +246,7 @@ namespace webium {
                         return void 0;
                     }
 
-                    let stack = this.stacks[i],
+                    let stack = this.stacks[i++],
                         values = stack.regexp.exec(req.pathname);
 
                     if (!values)
@@ -266,11 +270,11 @@ namespace webium {
                     }
 
                     // Calling handlers.
-                    return this.callNext(req, res, handlers, wrap);
+                    return this.dispatch(req, res, handlers, wrap);
                 };
 
                 // Calling middleware.
-                this.callNext(req, res, this.middleware, wrap);
+                this.dispatch(req, res, this.middleware, wrap);
             }
         }
 
@@ -279,7 +283,7 @@ namespace webium {
             return this.handler;
         }
 
-        private callNext(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
+        private dispatch(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
             let i = -1;
             let next = (thisObj?: any, sendImmediate = false) => {
                 i += 1;
@@ -295,7 +299,7 @@ namespace webium {
                     } else { // without 'next'
                         let result = handlers[i].call(thisObj || this, req, res);
 
-                        if (typeof result == "object" && typeof result["then"] == "function") { // promise
+                        if (typeof result === "object" && typeof result["then"] === "function") { // promise
                             return result["then"](_res => {
                                 if (_res !== undefined) {
                                     if (sendImmediate) {

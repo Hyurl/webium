@@ -1,13 +1,19 @@
 "use strict";
 
-const App = require("../").App;
+const webium = require("../");
 const axios = require("axios").default;
 const assert = require("assert");
 const qs = require("qs");
 const http = require("http");
 
-var app = new App();
+var app = new webium.App();
 var nodeVersion = parseFloat(process.version.slice(1));
+
+app.use((req, res, next) => {
+    assert.ok(req instanceof webium.RequestConstructor);
+    assert.ok(res instanceof webium.ResponseConstructor);
+    next();
+});
 
 require("./test-middleware")(app);
 
@@ -39,7 +45,7 @@ function listeningListener(outerServer) {
         Promise.resolve(null).then(() => {
             let promises = [];
 
-            for (let method of App.METHODS) {
+            for (let method of webium.App.METHODS) {
                 let _method = method.toLowerCase();
 
                 if (typeof axios[_method] == "function") {

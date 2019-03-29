@@ -7,6 +7,11 @@ var bodyParser = require("body-parser");
 var webium;
 (function (webium) {
     webium.Cookie = enhance.Cookie;
+    webium.URL = enhance.URL;
+    webium.RequestConstructor = enhance.Request;
+    webium.Http2RequestConstructor = enhance.Http2Request;
+    webium.ResponseConstructor = enhance.Response;
+    webium.Http2ResponseConstructor = enhance.Http2Response;
     webium.AppOptions = {
         domain: "",
         useProxy: false,
@@ -59,7 +64,7 @@ var webium;
             if (i === -1) {
                 i = this.paths.length;
                 var params = [], regexp = path instanceof RegExp ? path
-                    : pathToRegexp(path == "*" ? "(.*)" : path, params, {
+                    : pathToRegexp(path === "*" ? "(.*)" : path, params, {
                         sensitive: this.caseSensitive
                     });
                 this.paths.push(path);
@@ -142,10 +147,9 @@ var webium;
                     var enhanced = enhances(_req, _res), req = enhanced.req, res = enhanced.res, hasStack = false, hasHandler = false;
                     req.app = _this;
                     res.app = _this;
-                    var i = -1;
+                    var i = 0;
                     var wrap = function () {
-                        i += 1;
-                        if (i == _this.stacks.length) {
+                        if (i === _this.stacks.length) {
                             if (!hasStack) {
                                 res.status = 404;
                                 _this.onerror(res.status, req, res);
@@ -159,7 +163,7 @@ var webium;
                         else if (i > _this.stacks.length) {
                             return void 0;
                         }
-                        var stack = _this.stacks[i], values = stack.regexp.exec(req.pathname);
+                        var stack = _this.stacks[i++], values = stack.regexp.exec(req.pathname);
                         if (!values)
                             return wrap();
                         hasStack = true;
@@ -175,9 +179,9 @@ var webium;
                                 req.params[key.name] = values.shift();
                             }
                         }
-                        return _this.callNext(req, res, handlers, wrap);
+                        return _this.dispatch(req, res, handlers, wrap);
                     };
-                    _this.callNext(req, res, _this.middleware, wrap);
+                    _this.dispatch(req, res, _this.middleware, wrap);
                 };
             },
             enumerable: true,
@@ -190,7 +194,7 @@ var webium;
             enumerable: true,
             configurable: true
         });
-        App.prototype.callNext = function (req, res, handlers, cb) {
+        App.prototype.dispatch = function (req, res, handlers, cb) {
             var _this = this;
             var i = -1;
             var next = function (thisObj, sendImmediate) {
@@ -206,7 +210,7 @@ var webium;
                     }
                     else {
                         var result = handlers[i].call(thisObj || _this, req, res);
-                        if (typeof result == "object" && typeof result["then"] == "function") {
+                        if (typeof result === "object" && typeof result["then"] === "function") {
                             return result["then"](function (_res) {
                                 if (_res !== undefined) {
                                     if (sendImmediate) {
