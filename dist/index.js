@@ -249,11 +249,11 @@ var webium;
             return next(void 0, true);
         };
         App.prototype.listen = function () {
+            var _a;
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            var _a;
             this.server = (_a = http_1.createServer(this.handler)).listen.apply(_a, args);
             return this;
         };
