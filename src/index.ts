@@ -42,6 +42,9 @@ namespace webium {
     }
 
     export type RouteHandler = (req: Request, res: Response, next: (thisObj?: any) => any) => any;
+    export type HttpMethods = "CONNECT" | "DELETE"
+        | "HEAD" | "GET" | "HEAD" | "OPTIONS"
+        | "PATCH" | "POST" | "PUT" | "TRACE";
 
     export interface RouteStack {
         regexp: RegExp,
@@ -52,10 +55,9 @@ namespace webium {
     }
 
     export class Router {
-        static METHODS = [
+        static METHODS: HttpMethods[] = [
             "CONNECT",
             "DELETE",
-            "HEAD",
             "GET",
             "HEAD",
             "OPTIONS",
@@ -123,7 +125,7 @@ namespace webium {
          * @param unique The route should contain only one handler, and the new 
          *  one will replace the old one.
          */
-        method(name: string, path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
+        method(name: HttpMethods, path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             if (typeof handler !== "function")
                 throw new TypeError("The handler must be a function.");
 
@@ -198,6 +200,37 @@ namespace webium {
         /** An alias of `router.all()`. */
         any(path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
             return this.all(path, handler, unique);
+        }
+
+        /** Checks if the router contains corresponding route and handler. */
+        contains(method: HttpMethods, path: string, handler?: RouteHandler): boolean {
+            let i = this.paths.indexOf(path);
+
+            if (i === -1) {
+                return false;
+            }
+
+            if (!this.stacks[i].handlers[method] ||
+                !this.stacks[i].handlers[method].length) {
+                return false;
+            }
+
+            if (typeof handler === "function") {
+                return this.stacks[i].handlers[method].includes(handler);
+            }
+
+            return true;
+        }
+
+        /** Returns all methods bound to the path. */
+        methods(path: string): HttpMethods[] {
+            let i = this.paths.indexOf(path);
+
+            if (i === -1) {
+                return [];
+            } else {
+                return Object.keys(this.stacks[i].handlers) as HttpMethods[];
+            }
         }
     }
 

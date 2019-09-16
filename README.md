@@ -244,6 +244,14 @@ Adds a handler function to the all methods.
 
 - `any()`
 
+#### `contains(method: string, path: string, handler?: RouteHandler): boolean`
+
+Checks if the router contains corresponding route and handler.
+
+#### `methods(path: string): string[]`
+
+Returns all methods bound to the path.
+
 ### App
 
 The `App` class inherited from `Router`.

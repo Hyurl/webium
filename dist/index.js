@@ -113,10 +113,32 @@ var webium;
         Router.prototype.any = function (path, handler, unique) {
             return this.all(path, handler, unique);
         };
+        Router.prototype.contains = function (method, path, handler) {
+            var i = this.paths.indexOf(path);
+            if (i === -1) {
+                return false;
+            }
+            if (!this.stacks[i].handlers[method] ||
+                !this.stacks[i].handlers[method].length) {
+                return false;
+            }
+            if (typeof handler === "function") {
+                return this.stacks[i].handlers[method].includes(handler);
+            }
+            return true;
+        };
+        Router.prototype.methods = function (path) {
+            var i = this.paths.indexOf(path);
+            if (i === -1) {
+                return [];
+            }
+            else {
+                return Object.keys(this.stacks[i].handlers);
+            }
+        };
         Router.METHODS = [
             "CONNECT",
             "DELETE",
-            "HEAD",
             "GET",
             "HEAD",
             "OPTIONS",
