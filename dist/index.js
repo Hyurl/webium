@@ -123,7 +123,7 @@ var webium;
                 return false;
             }
             if (typeof handler === "function") {
-                return this.stacks[i].handlers[method].includes(handler);
+                return this.stacks[i].handlers[method].indexOf(handler) >= 0;
             }
             return true;
         };
