@@ -1,5 +1,5 @@
 import * as enhance from "enhance-req-res";
-import * as pathToRegexp from "path-to-regexp";
+import { pathToRegexp, Key } from "path-to-regexp";
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import * as net from "net";
 import * as bodyParser from "body-parser";
@@ -48,7 +48,7 @@ namespace webium {
 
     export interface RouteStack {
         regexp: RegExp,
-        params: pathToRegexp.Key[],
+        params: Key[],
         handlers: {
             [method: string]: Array<RouteHandler>
         }

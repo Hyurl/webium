@@ -1,7 +1,7 @@
 "use strict";
 var tslib_1 = require("tslib");
 var enhance = require("enhance-req-res");
-var pathToRegexp = require("path-to-regexp");
+var path_to_regexp_1 = require("path-to-regexp");
 var http_1 = require("http");
 var bodyParser = require("body-parser");
 var webium;
@@ -64,7 +64,7 @@ var webium;
             if (i === -1) {
                 i = this.paths.length;
                 var params = [], regexp = path instanceof RegExp ? path
-                    : pathToRegexp(path === "*" ? "(.*)" : path, params, {
+                    : path_to_regexp_1.pathToRegexp(path === "*" ? "(.*)" : path, params, {
                         sensitive: this.caseSensitive
                     });
                 this.paths.push(path);
