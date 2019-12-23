@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es5",
+        "target": "es2015",
         "preserveConstEnums": true,
         "rootDir": "src/",
         "outDir": "dist/",
@@ -10,11 +10,7 @@
         "sourceMap": true,
         "noUnusedLocals": true,
         "importHelpers": true,
-        "experimentalDecorators": true,
-        "lib": [
-            "es5",
-            "es2015.core"
-        ]
+        "experimentalDecorators": true
     },
     "files": [
         "src/index.ts"

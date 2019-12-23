@@ -1,9 +1,9 @@
 "use strict";
-var tslib_1 = require("tslib");
-var enhance = require("enhance-req-res");
-var path_to_regexp_1 = require("path-to-regexp");
-var http_1 = require("http");
-var bodyParser = require("body-parser");
+const tslib_1 = require("tslib");
+const enhance = require("enhance-req-res");
+const path_to_regexp_1 = require("path-to-regexp");
+const http_1 = require("http");
+const bodyParser = require("body-parser");
 var webium;
 (function (webium) {
     webium.Cookie = enhance.Cookie;
@@ -20,23 +20,22 @@ var webium;
         jsonp: false,
         caseSensitive: false
     };
-    var Router = (function () {
-        function Router(caseSensitive) {
-            if (caseSensitive === void 0) { caseSensitive = false; }
+    class Router {
+        constructor(caseSensitive = false) {
             this.middleware = [];
             this.paths = [];
             this.stacks = [];
             this.caseSensitive = caseSensitive;
         }
-        Router.prototype.use = function (arg) {
+        use(arg) {
             if (arg instanceof Router) {
-                var router = arg;
+                let router = arg;
                 this.middleware = this.middleware.concat(router.middleware);
-                for (var i in router.paths) {
-                    var j = this.paths.indexOf(router.paths[i]);
+                for (let i in router.paths) {
+                    let j = this.paths.indexOf(router.paths[i]);
                     if (j >= 0) {
-                        var stack = router.stacks[i], _stack = this.stacks[j];
-                        for (var method in stack.handlers) {
+                        let stack = router.stacks[i], _stack = this.stacks[j];
+                        for (let method in stack.handlers) {
                             _stack.handlers[method] = (_stack.handlers[method]
                                 || []).concat(stack.handlers[method]);
                         }
@@ -56,21 +55,21 @@ var webium;
                     ".use() must be a function or an instance of Router.");
             }
             return this;
-        };
-        Router.prototype.method = function (name, path, handler, unique) {
+        }
+        method(name, path, handler, unique) {
             if (typeof handler !== "function")
                 throw new TypeError("The handler must be a function.");
-            var i = this.paths.indexOf(path);
+            let i = this.paths.indexOf(path);
             if (i === -1) {
                 i = this.paths.length;
-                var params = [], regexp = path instanceof RegExp ? path
+                let params = [], regexp = path instanceof RegExp ? path
                     : path_to_regexp_1.pathToRegexp(path === "*" ? "(.*)" : path, params, {
                         sensitive: this.caseSensitive
                     });
                 this.paths.push(path);
                 this.stacks.push({
-                    regexp: regexp,
-                    params: params,
+                    regexp,
+                    params,
                     handlers: {}
                 });
             }
@@ -84,37 +83,36 @@ var webium;
                 this.stacks[i].handlers[name].push(handler);
             }
             return this;
-        };
-        Router.prototype.delete = function (path, handler, unique) {
+        }
+        delete(path, handler, unique) {
             return this.method("DELETE", path, handler, unique);
-        };
-        Router.prototype.get = function (path, handler, unique) {
+        }
+        get(path, handler, unique) {
             return this.method("GET", path, handler, unique);
-        };
-        Router.prototype.head = function (path, handler, unique) {
+        }
+        head(path, handler, unique) {
             return this.method("HEAD", path, handler, unique);
-        };
-        Router.prototype.patch = function (path, handler, unique) {
+        }
+        patch(path, handler, unique) {
             return this.method("PATCH", path, handler, unique);
-        };
-        Router.prototype.post = function (path, handler, unique) {
+        }
+        post(path, handler, unique) {
             return this.method("POST", path, handler, unique);
-        };
-        Router.prototype.put = function (path, handler, unique) {
+        }
+        put(path, handler, unique) {
             return this.method("PUT", path, handler, unique);
-        };
-        Router.prototype.all = function (path, handler, unique) {
-            for (var _i = 0, _a = this.constructor.METHODS; _i < _a.length; _i++) {
-                var method = _a[_i];
+        }
+        all(path, handler, unique) {
+            for (let method of this.constructor.METHODS) {
                 this.method(method, path, handler, unique);
             }
             return this;
-        };
-        Router.prototype.any = function (path, handler, unique) {
+        }
+        any(path, handler, unique) {
             return this.all(path, handler, unique);
-        };
-        Router.prototype.contains = function (method, path, handler) {
-            var i = this.paths.indexOf(path);
+        }
+        contains(method, path, handler) {
+            let i = this.paths.indexOf(path);
             if (i === -1) {
                 return false;
             }
@@ -126,175 +124,128 @@ var webium;
                 return this.stacks[i].handlers[method].indexOf(handler) >= 0;
             }
             return true;
-        };
-        Router.prototype.methods = function (path) {
-            var i = this.paths.indexOf(path);
+        }
+        methods(path) {
+            let i = this.paths.indexOf(path);
             if (i === -1) {
                 return [];
             }
             else {
                 return Object.keys(this.stacks[i].handlers);
             }
-        };
-        Router.METHODS = [
-            "CONNECT",
-            "DELETE",
-            "GET",
-            "HEAD",
-            "OPTIONS",
-            "PATCH",
-            "POST",
-            "PUT",
-            "TRACE"
-        ];
-        return Router;
-    }());
-    webium.Router = Router;
-    var App = (function (_super) {
-        tslib_1.__extends(App, _super);
-        function App(options) {
-            var _this = _super.call(this) || this;
-            _this.options = Object.assign({}, webium.AppOptions, options);
-            _this.caseSensitive = _this.options.caseSensitive;
-            options = Object.assign({ extended: true }, options);
-            _this.use(bodyParser.urlencoded(options))
-                .use(bodyParser.json(options));
-            return _this;
         }
-        Object.defineProperty(App.prototype, "handler", {
-            get: function () {
-                var _this = this;
-                var enhances = enhance(this.options);
-                return function (_req, _res) {
-                    var enhanced = enhances(_req, _res), req = enhanced.req, res = enhanced.res, hasStack = false, hasHandler = false;
-                    req.app = _this;
-                    res.app = _this;
-                    var i = 0;
-                    var wrap = function () {
-                        if (i === _this.stacks.length) {
-                            if (!hasStack) {
-                                res.status = 404;
-                                _this.onerror(res.status, req, res);
-                            }
-                            else if (!hasHandler) {
-                                res.status = 405;
-                                _this.onerror(res.status, req, res);
-                            }
-                            return void 0;
+    }
+    Router.METHODS = [
+        "CONNECT",
+        "DELETE",
+        "GET",
+        "HEAD",
+        "OPTIONS",
+        "PATCH",
+        "POST",
+        "PUT",
+        "TRACE"
+    ];
+    webium.Router = Router;
+    class App extends Router {
+        constructor(options) {
+            super();
+            this.options = Object.assign({}, webium.AppOptions, options);
+            this.caseSensitive = this.options.caseSensitive;
+            options = Object.assign({ extended: true }, options);
+            this.use(bodyParser.urlencoded(options))
+                .use(bodyParser.json(options));
+        }
+        get handler() {
+            let enhances = enhance(this.options);
+            return (_req, _res) => {
+                let enhanced = enhances(_req, _res), req = enhanced.req, res = enhanced.res, hasStack = false, hasHandler = false;
+                req.app = this;
+                res.app = this;
+                let i = 0;
+                let wrap = () => {
+                    if (i === this.stacks.length) {
+                        if (!hasStack) {
+                            res.status = 404;
+                            this.onerror(res.status, req, res);
                         }
-                        else if (i > _this.stacks.length) {
-                            return void 0;
+                        else if (!hasHandler) {
+                            res.status = 405;
+                            this.onerror(res.status, req, res);
                         }
-                        var stack = _this.stacks[i++], values = stack.regexp.exec(req.pathname);
-                        if (!values)
-                            return wrap();
-                        hasStack = true;
-                        var handlers = stack.handlers[req.method];
-                        if (!handlers || handlers.length === 0)
-                            return wrap();
-                        hasHandler = true;
-                        req.params = {};
-                        if (stack.params.length > 0) {
-                            values.shift();
-                            for (var _i = 0, _a = stack.params; _i < _a.length; _i++) {
-                                var key = _a[_i];
-                                req.params[key.name] = values.shift();
-                            }
+                        return void 0;
+                    }
+                    else if (i > this.stacks.length) {
+                        return void 0;
+                    }
+                    let stack = this.stacks[i++], values = stack.regexp.exec(req.pathname);
+                    if (!values)
+                        return wrap();
+                    hasStack = true;
+                    let handlers = stack.handlers[req.method];
+                    if (!handlers || handlers.length === 0)
+                        return wrap();
+                    hasHandler = true;
+                    req.params = {};
+                    if (stack.params.length > 0) {
+                        values.shift();
+                        for (let key of stack.params) {
+                            req.params[key.name] = values.shift();
                         }
-                        return _this.dispatch(req, res, handlers, wrap);
-                    };
-                    _this.dispatch(req, res, _this.middleware, wrap);
+                    }
+                    return this.dispatch(req, res, handlers, wrap);
                 };
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(App.prototype, "listener", {
-            get: function () {
-                return this.handler;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        App.prototype.dispatch = function (req, res, handlers, cb) {
-            var _this = this;
-            var i = -1;
-            var next = function (thisObj, sendImmediate) {
-                if (sendImmediate === void 0) { sendImmediate = false; }
-                return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                    var result;
-                    return tslib_1.__generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4, new Promise(setImmediate)];
-                            case 1:
-                                _a.sent();
-                                i += 1;
-                                if (i === handlers.length)
-                                    return [2, cb()];
-                                else if (i > handlers.length)
-                                    return [2, void 0];
-                                try {
-                                    if (handlers[i].length >= 3) {
-                                        return [2, handlers[i].call(thisObj || this, req, res, next)];
-                                    }
-                                    else {
-                                        result = handlers[i].call(thisObj || this, req, res);
-                                        if (typeof result === "object" && typeof result["then"] === "function") {
-                                            return [2, result["then"](function (_res) {
-                                                    if (_res !== undefined) {
-                                                        if (sendImmediate) {
-                                                            res.headersSent
-                                                                ? (!res.finished && res.write(_res))
-                                                                : res.send(_res);
-                                                        }
-                                                        else {
-                                                            return _res;
-                                                        }
-                                                    }
-                                                    else {
-                                                        return next(thisObj, sendImmediate);
-                                                    }
-                                                })];
-                                        }
-                                        else if (result !== undefined) {
-                                            if (sendImmediate) {
-                                                res.headersSent
-                                                    ? (!res.finished && res.write(result))
-                                                    : res.send(result);
-                                            }
-                                            else {
-                                                return [2, result];
-                                            }
-                                        }
-                                        else {
-                                            return [2, next(thisObj, sendImmediate)];
-                                        }
-                                    }
-                                }
-                                catch (e) {
-                                    this.onerror(e, req, res);
-                                }
-                                return [2];
-                        }
-                    });
-                });
+                this.dispatch(req, res, this.middleware, wrap);
             };
+        }
+        get listener() {
+            return this.handler;
+        }
+        dispatch(req, res, handlers, cb) {
+            let i = -1;
+            let next = (thisObj, sendImmediate = false) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                yield new Promise(setImmediate);
+                i += 1;
+                if (i === handlers.length)
+                    return cb();
+                else if (i > handlers.length)
+                    return void 0;
+                try {
+                    if (handlers[i].length >= 3) {
+                        return handlers[i].call(thisObj || this, req, res, next);
+                    }
+                    else {
+                        let result = yield handlers[i].call(thisObj || this, req, res);
+                        if (result !== undefined) {
+                            if (sendImmediate) {
+                                res.headersSent
+                                    ? (!res.finished && res.write(result))
+                                    : res.send(result);
+                            }
+                            else {
+                                return result;
+                            }
+                        }
+                        else {
+                            return next(thisObj, sendImmediate);
+                        }
+                    }
+                }
+                catch (e) {
+                    this.onerror(e, req, res);
+                }
+            });
             return next(void 0, true);
-        };
-        App.prototype.listen = function () {
-            var _a;
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            this.server = (_a = http_1.createServer(this.handler)).listen.apply(_a, args);
+        }
+        listen(...args) {
+            this.server = http_1.createServer(this.handler).listen(...args);
             return this;
-        };
-        App.prototype.close = function () {
+        }
+        close() {
             this.server.close();
             return this;
-        };
-        App.prototype.onerror = function (err, req, res) {
+        }
+        onerror(err, req, res) {
             if (res.statusCode === 404 || res.statusCode === 405) {
                 res.end(err);
             }
@@ -306,9 +257,8 @@ var webium;
                     err = res.status;
                 res.end(err);
             }
-        };
-        return App;
-    }(Router));
+        }
+    }
     webium.App = App;
 })(webium || (webium = {}));
 module.exports = webium;

@@ -331,23 +331,9 @@ namespace webium {
                     if (handlers[i].length >= 3) { // with 'next'
                         return handlers[i].call(thisObj || this, req, res, next);
                     } else { // without 'next'
-                        let result = handlers[i].call(thisObj || this, req, res);
+                        let result = await handlers[i].call(thisObj || this, req, res);
 
-                        if (typeof result === "object" && typeof result["then"] === "function") { // promise
-                            return result["then"](_res => {
-                                if (_res !== undefined) {
-                                    if (sendImmediate) {
-                                        res.headersSent
-                                            ? (!res.finished && res.write(_res))
-                                            : res.send(_res);
-                                    } else {
-                                        return _res;
-                                    }
-                                } else {
-                                    return next(thisObj, sendImmediate);
-                                }
-                            });
-                        } else if (result !== undefined) {
+                        if (result !== undefined) {
                             if (sendImmediate) {
                                 res.headersSent
                                     ? (!res.finished && res.write(result))
