@@ -170,7 +170,7 @@ Adds a handler function as a middleware, or concatenate another router.
 
 The type `RouteHandler` is a function with this signature:
 
-- `(req: Request, res: Response: next(thisObj: any) => any) => any`
+- `(req: Request, res: Response: next(thisObj: any) => Promise<any>) => any`
 
 ```javascript
 router.use((req, res, next) => {
@@ -772,9 +772,10 @@ when you are sending buffers.
 ### About the next()
 
 The function `next` returns a wrapper of the next handler, when it is called,
-the returning value (if any) of the handler will be returned. This module 
-will try to match as many routes as it can as long as you continue calling the
-`next()`, so you must not call it unless you know what you're doing.
+the returning value (if any) of the handler will be returned (in a resolved
+promise since v0.6). This module will try to match as many routes as it can as
+long as you continue calling the `next()` function, so you must not call it
+unless you know what you're doing.
 
 If you pass the `thisObj` to `next()`, then in the next handler function scope,
 the pseudo-variable `this` will be pointed to `thisObj`, except in an arrow 

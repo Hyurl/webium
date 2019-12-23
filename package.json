@@ -1,6 +1,6 @@
 {
   "name": "webium",
-  "version": "0.5.8",
+  "version": "0.6.0",
   "description": "A minimal web framework with middleware and routes.",
   "main": "dist/index.js",
   "types": "src/index.ts",

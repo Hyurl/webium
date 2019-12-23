@@ -41,7 +41,7 @@ namespace webium {
         caseSensitive: false
     }
 
-    export type RouteHandler = (req: Request, res: Response, next: (thisObj?: any) => any) => any;
+    export type RouteHandler = (req: Request, res: Response, next: (thisObj?: any) => Promise<any>) => any;
     export type HttpMethods = "CONNECT" | "DELETE"
         | "HEAD" | "GET" | "HEAD" | "OPTIONS"
         | "PATCH" | "POST" | "PUT" | "TRACE";
@@ -318,7 +318,8 @@ namespace webium {
 
         private dispatch(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
             let i = -1;
-            let next = (thisObj?: any, sendImmediate = false) => {
+            let next = async (thisObj?: any, sendImmediate = false) => {
+                await new Promise(setImmediate); // Ensure asynchronous call.
                 i += 1;
 
                 if (i === handlers.length)

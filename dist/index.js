@@ -221,52 +221,63 @@ var webium;
             var i = -1;
             var next = function (thisObj, sendImmediate) {
                 if (sendImmediate === void 0) { sendImmediate = false; }
-                i += 1;
-                if (i === handlers.length)
-                    return cb();
-                else if (i > handlers.length)
-                    return void 0;
-                try {
-                    if (handlers[i].length >= 3) {
-                        return handlers[i].call(thisObj || _this, req, res, next);
-                    }
-                    else {
-                        var result = handlers[i].call(thisObj || _this, req, res);
-                        if (typeof result === "object" && typeof result["then"] === "function") {
-                            return result["then"](function (_res) {
-                                if (_res !== undefined) {
-                                    if (sendImmediate) {
-                                        res.headersSent
-                                            ? (!res.finished && res.write(_res))
-                                            : res.send(_res);
+                return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                    var result;
+                    return tslib_1.__generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4, new Promise(setImmediate)];
+                            case 1:
+                                _a.sent();
+                                i += 1;
+                                if (i === handlers.length)
+                                    return [2, cb()];
+                                else if (i > handlers.length)
+                                    return [2, void 0];
+                                try {
+                                    if (handlers[i].length >= 3) {
+                                        return [2, handlers[i].call(thisObj || this, req, res, next)];
                                     }
                                     else {
-                                        return _res;
+                                        result = handlers[i].call(thisObj || this, req, res);
+                                        if (typeof result === "object" && typeof result["then"] === "function") {
+                                            return [2, result["then"](function (_res) {
+                                                    if (_res !== undefined) {
+                                                        if (sendImmediate) {
+                                                            res.headersSent
+                                                                ? (!res.finished && res.write(_res))
+                                                                : res.send(_res);
+                                                        }
+                                                        else {
+                                                            return _res;
+                                                        }
+                                                    }
+                                                    else {
+                                                        return next(thisObj, sendImmediate);
+                                                    }
+                                                })];
+                                        }
+                                        else if (result !== undefined) {
+                                            if (sendImmediate) {
+                                                res.headersSent
+                                                    ? (!res.finished && res.write(result))
+                                                    : res.send(result);
+                                            }
+                                            else {
+                                                return [2, result];
+                                            }
+                                        }
+                                        else {
+                                            return [2, next(thisObj, sendImmediate)];
+                                        }
                                     }
                                 }
-                                else {
-                                    return next(thisObj, sendImmediate);
+                                catch (e) {
+                                    this.onerror(e, req, res);
                                 }
-                            });
+                                return [2];
                         }
-                        else if (result !== undefined) {
-                            if (sendImmediate) {
-                                res.headersSent
-                                    ? (!res.finished && res.write(result))
-                                    : res.send(result);
-                            }
-                            else {
-                                return result;
-                            }
-                        }
-                        else {
-                            return next(thisObj, sendImmediate);
-                        }
-                    }
-                }
-                catch (e) {
-                    _this.onerror(e, req, res);
-                }
+                    });
+                });
             };
             return next(void 0, true);
         };
