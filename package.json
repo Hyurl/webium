@@ -8,6 +8,8 @@
     "node": ">=6.11"
   },
   "scripts": {
+    "pretest": "tsc",
+    "prepublishOnly": "tsc",
     "test": "node test"
   },
   "keywords": [
@@ -18,9 +20,9 @@
     "server"
   ],
   "author": {
-    "name": "Ayon Lee",
+    "name": "A-yon Lee",
     "email": "i@hyurl.com",
-    "url": "http://hyurl.com"
+    "url": "http://github.com/hyurl"
   },
   "homepage": "https://github.com/hyurl/webium",
   "repository": {
