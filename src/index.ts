@@ -15,7 +15,7 @@ namespace webium {
     export interface Request extends enhance.Request {
         app: App;
         /** The URL parameters. */
-        params: { [x: string]: string };
+        params: { [x: string]: string; };
         /**
          * Request body parsed by `body-parser`. By default, webium only 
          * parses `urlencoded` and JSON string.
@@ -29,7 +29,7 @@ namespace webium {
 
     export interface AppOptions extends enhance.Options {
         caseSensitive?: boolean;
-        [x: string]: any
+        [x: string]: any;
     }
 
     export const AppOptions: AppOptions = {
@@ -39,7 +39,7 @@ namespace webium {
         cookieSecret: "",
         jsonp: false,
         caseSensitive: false
-    }
+    };
 
     export type RouteHandler = (req: Request, res: Response, next: (thisObj?: any) => Promise<any>) => any;
     export type HttpMethods = "CONNECT" | "DELETE"
@@ -50,8 +50,8 @@ namespace webium {
         regexp: RegExp,
         params: Key[],
         handlers: {
-            [method: string]: Array<RouteHandler>
-        }
+            [method: string]: Array<RouteHandler>;
+        };
     }
 
     export class Router {
@@ -308,7 +308,7 @@ namespace webium {
 
                 // Calling middleware.
                 this.dispatch(req, res, this.middleware, wrap);
-            }
+            };
         }
 
         /** An alias of `handler`. */
@@ -319,6 +319,11 @@ namespace webium {
         private dispatch(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
             let i = -1;
             let next = async (thisObj?: any, sendImmediate = false) => {
+                // Express `next(err)`
+                if (thisObj instanceof Error || typeof thisObj === "string") {
+                    throw thisObj;
+                }
+
                 await new Promise(setImmediate); // Ensure asynchronous call.
                 i += 1;
 
@@ -329,14 +334,20 @@ namespace webium {
 
                 try {
                     if (handlers[i].length >= 3) { // with 'next'
-                        return handlers[i].call(thisObj || this, req, res, next);
+                        if (handlers[i].length === 4) {
+                            // Express `(err, req, res, next) => void`
+                            return handlers[i].call(void 0, null, req, res, next);
+                        } else {
+                            return handlers[i].call(thisObj || this, req, res, next);
+                        }
                     } else { // without 'next'
                         let result = await handlers[i].call(thisObj || this, req, res);
 
                         if (result !== undefined) {
                             if (sendImmediate) {
                                 res.headersSent
-                                    ? (!res.finished && res.write(result))
+                                    ? (!(res.finished || res.writableEnded)
+                                        && res.write(result))
                                     : res.send(result);
                             } else {
                                 return result;
