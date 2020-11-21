@@ -16,4 +16,4 @@ module.exports = function (app) {
         app.methods("/return-method").sort(),
         app.constructor.METHODS.sort()
     );
-}
+};

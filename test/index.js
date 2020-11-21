@@ -1,5 +1,6 @@
 "use strict";
 
+require("source-map-support/register");
 const webium = require("../");
 const axios = require("axios").default;
 const assert = require("assert");
@@ -51,7 +52,7 @@ function listeningListener(outerServer) {
                 if (typeof axios[_method] == "function") {
                     promises.push(axios[_method]("/return-method").then(res => {
                         if (method != "HEAD") {
-                            assert.equal(res.data, method);
+                            assert.strictEqual(res.data, method);
                         }
                     }));
                 }
@@ -68,7 +69,7 @@ function listeningListener(outerServer) {
             });
         }).then(() => {
             return axios.get("/").then(res => {
-                assert.equal(res.data, "<h1>Welcome to your first webium app!</h1>");
+                assert.strictEqual(res.data, "<h1>Welcome to your first webium app!</h1>");
             });
         }).then(() => {
             return axios.get("/user/1").then(res => {
@@ -80,23 +81,23 @@ function listeningListener(outerServer) {
             });
         }).then(() => {
             return axios.head("user/1").then(res => {
-                assert.equal(res.status, 200);
-                assert.equal(res.headers.server, "NodeJS");
-                assert.equal(res.headers["x-powered-by"], "webium");
+                assert.strictEqual(res.status, 200);
+                assert.strictEqual(res.headers.server, "NodeJS");
+                assert.strictEqual(res.headers["x-powered-by"], "webium");
             });
         }).then(() => {
             return axios.patch("/user-via-urlencoded", qs.stringify({
                 name: "Luna",
                 gender: "female"
             })).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.patch("/user-via-json", {
                 name: "Luna",
                 gender: "female"
             }).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.patch("/user-via-urlencoded-with-multi-dimensions", qs.stringify({
@@ -108,21 +109,21 @@ function listeningListener(outerServer) {
                     codes: [1, 2, 3, 4, 5]
                 }
             })).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.post("/user-via-urlencoded", qs.stringify({
                 name: "Luna",
                 gender: "female"
             })).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.post("/user-via-json", {
                 name: "Luna",
                 gender: "female"
             }).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.post("/user-via-urlencoded-with-multi-dimensions", qs.stringify({
@@ -134,21 +135,21 @@ function listeningListener(outerServer) {
                     codes: [1, 2, 3, 4, 5]
                 }
             })).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.put("/user-via-urlencoded", qs.stringify({
                 name: "Luna",
                 gender: "female"
             })).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.put("/user-via-json", {
                 name: "Luna",
                 gender: "female"
             }).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.put("/user-via-urlencoded-with-multi-dimensions", qs.stringify({
@@ -160,25 +161,25 @@ function listeningListener(outerServer) {
                     codes: [1, 2, 3, 4, 5]
                 }
             })).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.get("/router/").then(res => {
-                assert.equal(res.data, "<p>This response is from a router.</p>");
+                assert.strictEqual(res.data, "<p>This response is from a router.</p>");
             });
         }).then(() => {
             return axios.patch("/router/user-via-urlencoded", qs.stringify({
                 name: "Luna",
                 gender: "female"
             })).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.post("/router/user-via-json", {
                 name: "Luna",
                 gender: "female"
             }).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.put("/router/user-via-urlencoded-with-multi-dimensions", qs.stringify({
@@ -190,32 +191,32 @@ function listeningListener(outerServer) {
                     codes: [1, 2, 3, 4, 5]
                 }
             })).then(res => {
-                assert.equal(res.data, "OK");
+                assert.strictEqual(res.data, "OK");
             });
         }).then(() => {
             return axios.get("/unique").then(res => {
-                assert.equal(res.data, "<h1>Hello, World!</h1>");
+                assert.strictEqual(res.data, "<h1>Hello, World!</h1>");
             });
         }).then(() => {
             if (nodeVersion < 7.6) return;
             return axios.get("/async").then(res => {
-                assert.equal(res.data, "Hello, Webium!");
+                assert.strictEqual(res.data, "Hello, Webium!");
             });
         }).then(() => {
             return axios.get("/send-returning").then(res => {
-                assert.equal(res.data, "Hello, Webium!");
+                assert.strictEqual(res.data, "Hello, Webium!");
             });
         }).then(() => {
             return axios.get("/no-next").then(res => {
-                assert.equal(res.data, "Hello, Webium!");
+                assert.strictEqual(res.data, "Hello, Webium!");
             });
         }).then(() => {
             return axios.get("/test.html").then(res => {
-                assert.equal(res.data, "request an HTML file.");
+                assert.strictEqual(res.data, "request an HTML file.");
             });
         }).then(() => {
             return axios.get("/match-any").then(res => {
-                assert.equal(res.data, "Unknown route.");
+                assert.strictEqual(res.data, "Unknown route.");
             });
         }).then(() => {
             app.close();
@@ -229,5 +230,5 @@ function listeningListener(outerServer) {
             app.close();
             throw err;
         });
-    }
+    };
 }

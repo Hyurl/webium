@@ -7,4 +7,4 @@ module.exports = (app) => {
     }).get("/no-next", (req) => {
         return req.myVar;
     });
-}
+};

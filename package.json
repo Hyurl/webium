@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "axios": "^0.19.2",
-    "qs": "^6.9.4"
+    "qs": "^6.9.4",
+    "source-map-support": "^0.5.19"
   }
 }

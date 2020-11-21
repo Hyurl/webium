@@ -4,13 +4,13 @@ const assert = require("assert");
 
 module.exports = function (app) {
     app.patch("/user-via-urlencoded", (req, res) => {
-        assert.deepEqual(req.body, {
+        assert.deepStrictEqual(req.body, {
             name: "Luna",
             gender: "female"
         });
         res.send("OK");
     }).patch("/user-via-json", (req, res) => {
-        assert.deepEqual(req.body, {
+        assert.deepStrictEqual(req.body, {
             name: "Luna",
             gender: "female"
         });
@@ -27,4 +27,4 @@ module.exports = function (app) {
         });
         res.send("OK");
     });
-}
+};

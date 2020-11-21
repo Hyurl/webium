@@ -9,4 +9,4 @@ module.exports = (app) => {
     }).get("/async", async (req, res) => {
         return "Hello, Webium!";
     });
-}
+};

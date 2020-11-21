@@ -8,8 +8,8 @@ module.exports = function (app) {
         res.headers["x-powered-by"] = "webium";
         next();
     }).use((req, res, next) => {
-        assert.equal(res.headers["server"], "NodeJS");
-        assert.equal(res.headers["x-powered-by"], "webium");
+        assert.strictEqual(res.headers["server"], "NodeJS");
+        assert.strictEqual(res.headers["x-powered-by"], "webium");
         next();
     });
-}
+};

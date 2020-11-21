@@ -8,13 +8,13 @@ var router = new Router();
 router.get("/router/", (req, res) => {
     res.send("<p>This response is from a router.</p>");
 }).patch("/router/user-via-urlencoded", (req, res) => {
-    assert.deepEqual(req.body, {
+    assert.deepStrictEqual(req.body, {
         name: "Luna",
         gender: "female"
     });
     res.send("OK");
 }).post("/router/user-via-json", (req, res) => {
-    assert.deepEqual(req.body, {
+    assert.deepStrictEqual(req.body, {
         name: "Luna",
         gender: "female"
     });

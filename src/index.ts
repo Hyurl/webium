@@ -41,7 +41,11 @@ namespace webium {
         caseSensitive: false
     };
 
-    export type RouteHandler = (req: Request, res: Response, next: (thisObj?: any) => Promise<any>) => any;
+    export type RouteHandler = (
+        req: Request,
+        res: Response,
+        next: (thisObj?: any) => any
+    ) => any;
     export type HttpMethods = "CONNECT" | "DELETE"
         | "HEAD" | "GET" | "HEAD" | "OPTIONS"
         | "PATCH" | "POST" | "PUT" | "TRACE";
@@ -125,7 +129,12 @@ namespace webium {
          * @param unique The route should contain only one handler, and the new 
          *  one will replace the old one.
          */
-        method(name: HttpMethods, path: string | RegExp, handler: RouteHandler, unique?: boolean): this {
+        method(
+            name: HttpMethods,
+            path: string | RegExp,
+            handler: RouteHandler,
+            unique?: boolean
+        ): this {
             if (typeof handler !== "function")
                 throw new TypeError("The handler must be a function.");
 
@@ -263,7 +272,7 @@ namespace webium {
                 res.app = this;
 
                 let i = 0;
-                let wrap = () => {
+                let applyHandlers = () => {
                     if (i === this.stacks.length) {
                         // All routes has been tested, and none is matched, 
                         // send 404/405 response.
@@ -274,6 +283,7 @@ namespace webium {
                             res.status = 405;
                             this.onerror(res.status, req, res);
                         }
+
                         return void 0;
                     } else if (i > this.stacks.length) {
                         return void 0;
@@ -283,13 +293,13 @@ namespace webium {
                         values = stack.regexp.exec(req.pathname);
 
                     if (!values)
-                        return wrap();
+                        return applyHandlers();
 
                     hasStack = true;
 
                     let handlers = stack.handlers[req.method];
                     if (!handlers || handlers.length === 0)
-                        return wrap();
+                        return applyHandlers();
 
                     hasHandler = true;
 
@@ -303,11 +313,11 @@ namespace webium {
                     }
 
                     // Calling handlers.
-                    return this.dispatch(req, res, handlers, wrap);
+                    return this.dispatch(req, res, handlers);
                 };
 
                 // Calling middleware.
-                this.dispatch(req, res, this.middleware, wrap);
+                this.dispatch(req, res, this.middleware, applyHandlers);
             };
         }
 
@@ -316,32 +326,34 @@ namespace webium {
             return this.handler;
         }
 
-        private dispatch(req: Request, res: Response, handlers: RouteHandler[], cb: () => any) {
-            let i = -1;
-            let next = async (thisObj?: any, sendImmediate = false) => {
-                // Express `next(err)`
-                if (thisObj instanceof Error || typeof thisObj === "string") {
-                    throw thisObj;
-                }
-
-                await new Promise(setImmediate); // Ensure asynchronous call.
-                i += 1;
-
-                if (i === handlers.length)
-                    return cb();
-                else if (i > handlers.length)
-                    return void 0;
-
+        private dispatch(
+            req: Request,
+            res: Response,
+            handlers: RouteHandler[],
+            cb: () => any = null
+        ) {
+            let i = 0;
+            (async function next(thisObj?: any, sendImmediate = false) {
                 try {
-                    if (handlers[i].length >= 3) { // with 'next'
-                        if (handlers[i].length === 4) {
+                    let handle = handlers[i++];
+
+                    if (!handle)
+                        return cb?.();
+
+                    // Express `next(err)`
+                    if (thisObj instanceof Error || typeof thisObj === "string") {
+                        throw thisObj;
+                    }
+
+                    if (handle.length >= 3) { // with 'next'
+                        if (handle.length === 4) {
                             // Express `(err, req, res, next) => void`
-                            return handlers[i].call(void 0, null, req, res, next);
+                            return handle.call(void 0, null, req, res, next);
                         } else {
-                            return handlers[i].call(thisObj || this, req, res, next);
+                            return handle.call(thisObj, req, res, next);
                         }
                     } else { // without 'next'
-                        let result = await handlers[i].call(thisObj || this, req, res);
+                        let result = await handle.call(thisObj, req, res);
 
                         if (result !== undefined) {
                             if (sendImmediate) {
@@ -359,9 +371,7 @@ namespace webium {
                 } catch (e) {
                     this.onerror(e, req, res);
                 }
-            };
-
-            return next(void 0, true);
+            })(this, true);
         }
 
         /** Same as `http.listen()`. */

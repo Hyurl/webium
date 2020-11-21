@@ -6,4 +6,4 @@ module.exports = function (app) {
     }, true).get("/unique", (req, res) => {
         res.send("<h1>Hello, World!</h1>");
     }, true);
-}
+};
