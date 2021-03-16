@@ -42,7 +42,7 @@
     "tslib": "^1.14.1"
   },
   "devDependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "qs": "^6.9.4",
     "source-map-support": "^0.5.19"
   }
