@@ -332,6 +332,7 @@ namespace webium {
             handlers: RouteHandler[],
             cb: () => any = null
         ) {
+            const _this = this;
             let i = 0;
             (async function next(thisObj?: any, sendImmediate = false) {
                 try {
@@ -369,7 +370,7 @@ namespace webium {
                         }
                     }
                 } catch (e) {
-                    this.onerror(e, req, res);
+                    _this.onerror(e, req, res);
                 }
             })(this, true);
         }
