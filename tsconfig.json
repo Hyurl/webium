@@ -9,7 +9,6 @@
         "removeComments": true,
         "sourceMap": true,
         "noUnusedLocals": true,
-        "importHelpers": true,
         "experimentalDecorators": true
     },
     "files": [
